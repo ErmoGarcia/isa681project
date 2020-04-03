@@ -1,0 +1,4 @@
+#!/bin/sh
+. project/venv/bin/activate
+export FLASK_APP=project/project.py
+project/venv/bin/python -m flask run
