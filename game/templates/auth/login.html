@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Login{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  {% include 'form.html' %}
+  {% if error %}
+    <p><strong>Error:</strong> {{ error }}</p>
+  {% endif %}
+{% endblock %}

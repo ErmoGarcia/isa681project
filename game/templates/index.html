@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Wellcome{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <p>To enter, please <a href='/auth/login'>login</a>.</p>
+{% endblock %}

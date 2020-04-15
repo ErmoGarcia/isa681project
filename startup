@@ -1,0 +1,9 @@
+#!/bin/sh
+python3 -m venv venv
+. venv/bin/activate
+pip install Flask
+pip install Flask-SQLAlchemy
+pip install flask-bcrypt
+pip install flask-wtf
+pip install flask-login
+./run

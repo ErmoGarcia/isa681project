@@ -1,0 +1,18 @@
+<form method='post'>
+  {{ form.csrf_token }}
+  {{ form.hidden_tag() }}
+  {% for field in form if field.widget.input_type != 'hidden' %}
+    <p>
+    {{ field.label }}: {{ field }}
+      <span class="error">
+        {% if field.errors %}
+          {% for error in field.errors %}
+            {{ error }}
+          {% endfor %}
+        {% endif %}
+      </span>
+    </p>
+  {% endfor %}
+  <button type="submit">Submit</button>
+</form>
+
