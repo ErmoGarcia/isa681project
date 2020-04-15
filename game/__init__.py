@@ -44,6 +44,7 @@ def create_app():
             )
         return Navbar('Game',
             View('{}'.format(current_user.username), 'home'),
+            View('History', 'play.history'),
             View('Logout', 'auth.logout'),
         )
     nav.init_app(app)

@@ -21,3 +21,12 @@ def newgame():
         flash('New game created ({}).'.format(game.created))
         return redirect(url_for('home'))
     return render_template('play/newgame.html')
+
+
+@bp.route('/history')
+def history():
+    if not current_user.is_authenticated:
+        flash('You need to login first.')
+        return redirect(url_for('auth.login'))
+    games = Game.query.order_by(Game.created).all()
+    return render_template('play/history.html', games = games)

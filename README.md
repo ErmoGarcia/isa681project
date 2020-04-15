@@ -77,17 +77,19 @@ https://modwsgi.readthedocs.io/en/master/user-guides/quick-configuration-guide.h
 
 2 - Youtube videos: https://www.youtube.com/playlist?list=PLLjmbh6XPGK4ISY747FUHXEl9lBxre4mM
 
-3 - SQLAlchemy: https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/
+3 - Flask Cheatsheet: https://s3.us-east-2.amazonaws.com/prettyprinted/flask_cheatsheet.pdf
 
-4 - Flask-WTF: https://flask-wtf.readthedocs.io/en/stable/index.html
+4 - SQLAlchemy: https://flask-sqlalchemy.palletsprojects.com/en/2.x/quickstart/
 
-5 - Flask-Login: https://flask-login.readthedocs.io/en/latest/
+5 - Flask-WTF: https://flask-wtf.readthedocs.io/en/stable/index.html
 
-6 - Flask-Bcrypt: https://flask-bcrypt.readthedocs.io/en/latest/
+6 - Flask-Login: https://flask-login.readthedocs.io/en/latest/
 
-7 - Flask-Nav: https://pythonhosted.org/flask-nav/index.html
+7 - Flask-Bcrypt: https://flask-bcrypt.readthedocs.io/en/latest/
 
-8 - Flask-Bootstrap: https://pythonhosted.org/Flask-Bootstrap/basic-usage.html
+8 - Flask-Nav: https://pythonhosted.org/flask-nav/index.html
+
+9 - Flask-Bootstrap: https://pythonhosted.org/Flask-Bootstrap/basic-usage.html
 
 
 

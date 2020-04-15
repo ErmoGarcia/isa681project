@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Game History{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  {% for game in games %}
+    <p>Game {{ game.id }}: created on {{ game.created }}</p>
+  {% endfor %}
+{% endblock %}
