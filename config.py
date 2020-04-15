@@ -8,5 +8,6 @@ class BaseConfig(object):
 
 class DevConfig(object):
     DEBUG = True
+    TESTING = True
     SECRET_KEY = 'dev key'
     SQLALCHEMY_DATABASE_URI = 'sqlite:///game.db'

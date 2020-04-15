@@ -25,7 +25,8 @@ def register():
     if request.method == 'POST':
         if form.validate_on_submit():
             user = User(username=request.form['username'], password=
-                    bcrypt.generate_password_hash(request.form['password']))
+                    bcrypt.generate_password_hash(request.form['password']),
+                    email=request.form['email'])
             db.session.add(user)
             db.session.commit()
             flash('New user registered. Try to login.')
