@@ -71,7 +71,7 @@ https://modwsgi.readthedocs.io/en/master/user-guides/quick-configuration-guide.h
 
 
 
-##FLASK:
+## FLASK:
 
 1 - Tutorial: https://flask.palletsprojects.com/en/1.1.x/tutorial/
 
@@ -85,9 +85,12 @@ https://modwsgi.readthedocs.io/en/master/user-guides/quick-configuration-guide.h
 
 6 - Flask-Bcrypt: https://flask-bcrypt.readthedocs.io/en/latest/
 
+7 - Flask-Nav: https://pythonhosted.org/flask-nav/index.html
+
+8 - Flask-Bootstrap: https://pythonhosted.org/Flask-Bootstrap/basic-usage.html
+
 
 
 ## Extras:
 
 1 - Recaptcha: https://john.soban.ski/add-recaptcha-to-your-flask-application.html
-

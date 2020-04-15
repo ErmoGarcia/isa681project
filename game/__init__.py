@@ -5,13 +5,16 @@ from flask import (
 )
 
 from flask_login import current_user
+from flask_bootstrap import Bootstrap
+from flask_nav import Nav
+from flask_nav.elements import Navbar, View
 
 def create_app():
     # Create app object
     app = Flask(__name__, instance_relative_config=True)
 
     # Config from file
-    app.config.from_object('config.DevConfig')
+    app.config.from_object('config')
 
     # Initialize Database
     from game.models import db
@@ -19,10 +22,30 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    # Initialize login
     from game.auth import bp, bcrypt, login_manager
     bcrypt.init_app(app)
     login_manager.init_app(app)
     app.register_blueprint(bp)
+
+    # Initialize navbar
+    nav = Nav()
+    @nav.navigation()
+    def top_nav():
+        if not current_user.is_authenticated:
+            return Navbar('Game',
+                View('Home', 'index'),
+                View('Register', 'auth.register'),
+                View('Login', 'auth.login'),
+            )
+        return Navbar('Game',
+            View('{}'.format(current_user.username), 'home'),
+            View('Logout', 'auth.logout'),
+        )
+    nav.init_app(app)
+
+    # Initialize bootstrap
+    Bootstrap(app)
 
     @app.route('/home')
     def home():

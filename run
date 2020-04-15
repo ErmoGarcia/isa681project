@@ -1,4 +1,5 @@
 #!/bin/sh
 . venv/bin/activate
 export FLASK_APP=game
+export FLASK_ENV=development
 venv/bin/python -m flask run
