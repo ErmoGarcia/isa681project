@@ -1,6 +1,4 @@
-from functools import wraps
-
-from flask import(
+from flask import (
         Blueprint, request, redirect, render_template, url_for, flash
 )
 

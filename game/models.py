@@ -24,3 +24,18 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+
+class Game(db.Model):
+    __tablename__ = "game"
+
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.DateTime, nullable=False)
+
+    def __repr__(self):
+        return '<Game %r>' % self.created
+
+played_on = db.Table('played_on',
+        db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+        db.Column('game_id', db.Integer, db.ForeignKey('game.id'), primary_key=True),
+        db.Column('win', db.Boolean)
+)

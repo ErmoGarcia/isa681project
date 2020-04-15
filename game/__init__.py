@@ -28,6 +28,10 @@ def create_app():
     login_manager.init_app(app)
     app.register_blueprint(bp)
 
+    # Initialize play
+    from . import play
+    app.register_blueprint(play.bp)
+
     # Initialize navbar
     nav = Nav()
     @nav.navigation()
