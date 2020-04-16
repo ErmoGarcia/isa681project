@@ -30,6 +30,7 @@ def create_app():
 
     # Initialize play
     from . import play
+    play.socketio.init_app(app)
     app.register_blueprint(play.bp)
 
     # Initialize navbar

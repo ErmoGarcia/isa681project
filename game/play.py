@@ -6,8 +6,11 @@ from flask import (
 
 from game.models import User, Game, players, db
 from flask_login import current_user
+from flask_socketio import SocketIO, emit
 
 bp = Blueprint('play', __name__, url_prefix='/play')
+
+socketio = SocketIO()
 
 @bp.route('/newgame', methods=['GET', 'POST'])
 def newgame():
@@ -31,3 +34,21 @@ def history():
         return redirect(url_for('auth.login'))
     games = Game.query.order_by(Game.created).all()
     return render_template('play/history.html', games = games)
+
+@socketio.on('connect')
+def new_connection():
+    if not current_user.is_authenticated:
+        flash('You need to login first.')
+        return False
+    print('New connection')
+    msg = 'User {} has connected.'.format(current_user.username)
+    emit("new_connection", {"msg" : msg}, broadcast=True)
+
+@socketio.on('disconnect')
+def new_disconnection():
+    if not current_user.is_authenticated:
+        flash('You need to login first.')
+        return False
+    print('New connection')
+    msg = 'User {} has disconnected.'.format(current_user.username)
+    emit("new_disconnection", {"msg" : msg}, broadcast=True)

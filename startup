@@ -8,4 +8,9 @@ pip install flask-wtf
 pip install flask-login
 pip install flask-bootstrap
 pip install flask-nav
+pip install flask-socketio
+pip install wheel
+pip install greenlet
+pip install gevent
+pip install gevent-websocket
 ./run
