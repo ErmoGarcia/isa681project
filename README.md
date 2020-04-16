@@ -91,8 +91,12 @@ https://modwsgi.readthedocs.io/en/master/user-guides/quick-configuration-guide.h
 
 9 - Flask-Bootstrap: https://pythonhosted.org/Flask-Bootstrap/basic-usage.html
 
+10 - Flask-SocketiIO: https://flask-socketio.readthedocs.io/en/latest/
+
 
 
 ## Extras:
 
 1 - Recaptcha: https://john.soban.ski/add-recaptcha-to-your-flask-application.html
+
+2 - Videos chat app: https://www.youtube.com/watch?v=RdSrkkrj3l4

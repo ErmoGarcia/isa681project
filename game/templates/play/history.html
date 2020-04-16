@@ -6,6 +6,9 @@
 
 {% block content %}
   {% for game in games %}
-    <p>Game {{ game.id }}: created on {{ game.created }}</p>
+    <p>Game {{ game.id }}: created on {{ game.created.strftime("%b %d %Y") }}</p>
+    {% for player in game.players %}
+      <ul>Player: {{ player.username }}</ul>
+    {% endfor %}
   {% endfor %}
 {% endblock %}
