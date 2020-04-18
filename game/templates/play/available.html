@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Games Available{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  {% for room in rooms %}
+    <p><strong>Game {{ room.id }}:</strong> created on {{ room.created.strftime("%b %d %Y") }}</p>
+    <ul>
+      {% for player in room.players %}
+      <li>Player: {{ player }}</a></li>
+      {% endfor %}
+    </ul>
+    <p><a href='{{ url_for('play.gameroom', id=room.id) }}'>Join room.</a></p>
+  {% endfor %}
+{% endblock %}

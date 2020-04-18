@@ -1,6 +1,7 @@
 #!/bin/sh
 python3 -m venv venv
 . venv/bin/activate
+pip install wheel
 pip install Flask
 pip install Flask-SQLAlchemy
 pip install flask-bcrypt
@@ -9,8 +10,6 @@ pip install flask-login
 pip install flask-bootstrap
 pip install flask-nav
 pip install flask-socketio
-pip install wheel
 pip install greenlet
 pip install gevent
 pip install gevent-websocket
-./run

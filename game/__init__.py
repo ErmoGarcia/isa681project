@@ -33,6 +33,10 @@ def create_app():
     play.socketio.init_app(app)
     app.register_blueprint(play.bp)
 
+    # Initialize info
+    from . import info
+    app.register_blueprint(info.bp)
+
     # Initialize navbar
     nav = Nav()
     @nav.navigation()
@@ -44,7 +48,7 @@ def create_app():
                 View('Login', 'auth.login'),
             )
         return Navbar('Game',
-            View('{}'.format(current_user.username), 'home'),
+            View('{}'.format(current_user.username), 'info.home'),
             View('History', 'play.history'),
             View('Logout', 'auth.logout'),
         )
@@ -52,13 +56,6 @@ def create_app():
 
     # Initialize bootstrap
     Bootstrap(app)
-
-    @app.route('/home')
-    def home():
-        if not current_user.is_authenticated:
-            flash('You need to login first.')
-            return redirect(url_for('auth.login'))
-        return render_template('home.html')
 
     @app.route('/')
     def index():
