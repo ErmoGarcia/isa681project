@@ -23,6 +23,7 @@ socketio = SocketIO()
 # List of active rooms
 rooms = {}
 
+from game.events import *
 
 # New game function: creates a new game
 @bp.route('/newgame')
@@ -56,7 +57,7 @@ def joingame():
 
     # Searches for available rooms
     for room in rooms.values():
-        if room.is_available():
+        if room.isAvailable():
             available.append(room)
 
     return render_template('play/available.html', rooms = available)
@@ -71,21 +72,22 @@ def gameroom(id):
 
     # Gets the room object from the active rooms dictionary
     room = rooms[id]
-    # Saves the room in the session
-    session['room'] = id
 
     # Redirect if there is no such room
     if room is None:
         flash('Game not found.')
         return redirect(url_for('info.home'))
 
+    # Saves the room in the session
+    session['room'] = id
+
     # Add the new player to the room
     if current_user.username not in room.players:
         # Unless the room is full
-        if room.is_full():
+        if room.isFull():
             flash('The game is full. Try another one.')
             return redirect(url_for('play.joingame'))
-        room.players.append(current_user.username)
+        room.addPlayer(current_user.username)
 
     return render_template('play/gameroom.html')
 
