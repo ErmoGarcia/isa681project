@@ -1,20 +1,62 @@
-{% extends "bootstrap/base.html" %}
+<!doctype html>
+<html lang="en">
+  <head>
+    {% block head %}
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-{% block title %}Game{% endblock %}
+    {% block styles %}
+    <!-- Bootstrap CSS -->
+    {{ bootstrap.load_css() }}
+    {% endblock %}
 
-{% block body %}
-  {% block navbar %}
-    {{ nav.top_nav.render() }}
-  {% endblock %}
+    <title>{% block title %}{% endblock %} - Mus</title>
+    <link rel="icon" type="image/ico" href="{{ url_for('static', filename='logo.svg') }}">
 
-<div class="container">
-  {% block header %}{% endblock %}
-  {% block content %}{% endblock %}
+    {% endblock %}
+  </head>
 
-  <p>
-  {% for message in get_flashed_messages() %}
-    {{ message }}
-  {% endfor %}
-  </p>
-</div>
-{% endblock %}
+  <body>
+    {% from 'bootstrap/nav.html' import render_nav_item %}
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#myNavbar" aria-controls="myNavbar" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <a class="navbar-brand" href="#">
+          <img src="{{ url_for('static', filename='logo.svg') }}" width="30" height="30" class="d-inline-block align-top" alt="logo">
+          Mus
+        </a>
+        <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+          {% if current_user.is_authenticated %}
+            {{ render_nav_item('index', '{}'.format(current_user.username), use_li=True) }}
+            {{ render_nav_item('play.history', 'History', use_li=True) }}
+            {{ render_nav_item('auth.logout', 'Logout', use_li=True) }}
+          {% else %}
+            {{ render_nav_item('index', 'Home', use_li=True) }}
+            {{ render_nav_item('auth.register', 'Register', use_li=True) }}
+            {{ render_nav_item('auth.login', 'Login', use_li=True) }}
+          {% endif %}
+        </ul>
+      </div>
+    </nav>
+    <br><br>
+
+    <div class="container">
+      {% block header %}{% endblock %}
+      {% block content %}{% endblock %}
+
+      <p>
+      {% for message in get_flashed_messages() %}
+      {{ message }}
+      {% endfor %}
+      </p>
+    </div>
+    {% block scripts %}
+    <!-- Optional JavaScript -->
+    {{ bootstrap.load_js() }}
+    {% endblock %}
+  </body>
+</html>

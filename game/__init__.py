@@ -1,13 +1,11 @@
 import os
 
 from flask import (
-        Flask, render_template, render_template, flash, redirect, url_for
+        Flask, render_template, flash, redirect, url_for
 )
 
 from flask_login import current_user
 from flask_bootstrap import Bootstrap
-from flask_nav import Nav
-from flask_nav.elements import Navbar, View
 
 def create_app():
     # Create app object
@@ -37,28 +35,13 @@ def create_app():
     from . import info
     app.register_blueprint(info.bp)
 
-    # Initialize navbar
-    nav = Nav()
-    @nav.navigation()
-    def top_nav():
-        if not current_user.is_authenticated:
-            return Navbar('Game',
-                View('Home', 'index'),
-                View('Register', 'auth.register'),
-                View('Login', 'auth.login'),
-            )
-        return Navbar('Game',
-            View('{}'.format(current_user.username), 'info.home'),
-            View('History', 'play.history'),
-            View('Logout', 'auth.logout'),
-        )
-    nav.init_app(app)
-
     # Initialize bootstrap
     Bootstrap(app)
 
     @app.route('/')
     def index():
+        if current_user.is_authenticated:
+            return redirect(url_for('info.home'))
         return render_template('index.html')
 
     return app

@@ -7,8 +7,7 @@ pip install Flask-SQLAlchemy
 pip install flask-bcrypt
 pip install flask-wtf
 pip install flask-login
-pip install flask-bootstrap
-pip install flask-nav
+pip install bootstrap-flask
 pip install flask-socketio
 pip install greenlet
 pip install gevent
