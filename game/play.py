@@ -3,6 +3,7 @@
 ####################
 
 from datetime import datetime
+from uuid import uuid4
 
 from flask import (
         Blueprint, session, redirect, render_template, url_for, flash
@@ -33,16 +34,22 @@ def newgame():
         return redirect(url_for('auth.login'))
 
     # Creates a room with the username that created it as id
-    creator = current_user.username
-    if creator not in rooms:
-        rooms[creator] = Room(creator)
+    #creator = current_user.username
+    #if creator not in rooms:
+    #    rooms[creator] = Room(creator)
 
-    # Unless there is an active room from the same creator
-    else:
-        flash('The game you created is not finished.')
+    # Creates a random id
+    id = str(uuid4().int)
+
+    # Checks that the id is unique
+    if id in rooms:
+        raise Exception('Every room needs to have a different id.')
+
+    # Creates the room with the random unique id
+    rooms[id] = Room(id)
 
     # Sends the user to the new game room
-    return redirect(url_for('play.gameroom', id=creator))
+    return redirect(url_for('play.gameroom', id=id))
 
 
 # Join game function:
@@ -52,13 +59,14 @@ def joingame():
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
-    # List of available rooms to join
+    # List of available rooms to join and time they were created
     available = []
 
     # Searches for available rooms
     for room in rooms.values():
         if room.isAvailable():
-            available.append(room)
+            # Saves creation time and player names for each available room
+            available.append((room.id, room.created, room.getPlayers()))
 
     return render_template('play/available.html', rooms = available)
 
@@ -71,7 +79,7 @@ def gameroom(id):
         return redirect(url_for('auth.login'))
 
     # Gets the room object from the active rooms dictionary
-    room = rooms[id]
+    room = rooms.get(id)
 
     # Redirect if there is no such room
     if room is None:

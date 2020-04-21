@@ -1,14 +1,25 @@
-import time
+from time import sleep
+from datetime import datetime
 
 from flask import session, request
 
 from game.play import socketio, rooms
 
-from flask_socketio import emit, join_room
+from flask_socketio import emit, join_room, leave_room, close_room
 from flask_login import current_user
 
-#def start(room):
-#    room.started =
+def start(room):
+    room.started = datetime.utcnow()
+    room.deck.shuffle()
+    print(room.deck)
+    return
+
+
+def finish(room):
+    room.finished = datetime.utcnow()
+    rooms.pop(room.id)
+    socketio.close_room(room)
+    return
 
 # Socket connection event
 @socketio.on('connect')
@@ -16,8 +27,12 @@ def new_connection():
     if not current_user.is_authenticated:
         return False
 
+    print('on connection: '+str(request.sid))
+
     # Gets the room where the client is at form the session
-    room = rooms[session['room']]
+    room = rooms.get(session['room'])
+
+    print(rooms)
 
     # Gets the Player from the Room
     player = room.getByName(current_user.username)
@@ -42,32 +57,38 @@ def new_connection():
             'User {} has connected.'.format(player.name)},
             room = room)
 
-#    if room.isFull():
-#        start_game(room)
+    if room.isFull():
+        start_game(room)
 
 
 @socketio.on('disconnect')
 def new_disconnection():
 
     # Gets the room where the client was at form the session
-    room = rooms[session['room']]
+    room = rooms.get(session['room'])
+    if room is None:
+        raise Exception('No room available to connect.')
 
     player = room.getBySid(request.sid)
-    room.players.remove(player)
 
     if player is None:
         raise Exception('Players should be in the game before they disconnect.')
 
+    #room.players.remove(player)
+
     player.disconnected()
+    leave_room(room)
 
     emit("new_disconnection", {"disconnection" :
             'User {} has disconnected.'.format(player.name)},
             room=room)
 
-    time.sleep(60)
+    print('removed: '+player.name)
+
+    sleep(60)
 
     if player.afk:
-#        finish(room)
+        #finish(room)
         emit("game_over", {"game_over" :
                 'User {} was afk for too long.'.format(player.name)},
                 room=room)

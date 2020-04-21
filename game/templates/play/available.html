@@ -5,13 +5,20 @@
 {% endblock %}
 
 {% block content %}
+<div class='list-group'>
   {% for room in rooms %}
-    <p><strong>Game {{ room.id }}:</strong> created on {{ room.created.strftime("%b %d %Y") }}</p>
-    <ul>
-      {% for player in room.players %}
-      <li>Player: {{ player }}</a></li>
-      {% endfor %}
-    </ul>
-    <p><a href='{{ url_for('play.gameroom', id=room.id) }}'>Join room.</a></p>
+  <a href='{{ url_for('play.gameroom', id=room[0]) }}' class="list-group-item list-group-item-action active">
+    <div class="d-flex w-100 justify-content-between">
+      <h5 class="mb-1">Game</h5>
+      <small>created at {{ room[1].strftime("%l %b %d") }}</small>
+      <ul class="mb-1">
+        {% for player in room[2] %}
+        <li>Player: {{ player }}</a></li>
+        {% endfor %}
+      </ul>
+   </div>
+  </a>
   {% endfor %}
+</div>
+
 {% endblock %}
