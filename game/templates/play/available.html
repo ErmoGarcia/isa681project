@@ -7,16 +7,14 @@
 {% block content %}
 <div class='list-group'>
   {% for room in rooms %}
-  <a href='{{ url_for('play.gameroom', id=room[0]) }}' class="list-group-item list-group-item-action active">
+  <a href='{{ url_for('play.gameroom', id=room[0]) }}' class="list-group-item list-group-item-action">
     <div class="d-flex w-100 justify-content-between">
       <h5 class="mb-1">Game</h5>
       <small>created at {{ room[1].strftime("%l %b %d") }}</small>
-      <ul class="mb-1">
-        {% for player in room[2] %}
-        <li>Player: {{ player }}</a></li>
-        {% endfor %}
-      </ul>
    </div>
+   {% for player in room[2] %}
+   <p class="mb-1">Player: {{ player }}</p>
+   {% endfor %}
   </a>
   {% endfor %}
 </div>

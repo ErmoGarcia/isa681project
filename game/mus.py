@@ -40,13 +40,6 @@ class Player:
         self.sid = None
         self.afk = False
 
-    def connected(self, sid):
-        self.sid = sid
-
-    def disconnected(self):
-        self.sid = None
-        self.afk = True
-
 # Room class: its id is the username of its creator
 class Room:
 
@@ -58,7 +51,7 @@ class Room:
 
     # List of players in the room
     players = []
-    afklist = []
+    connected = []
 
     # Deck of cards
     deck = Deck()
@@ -72,6 +65,11 @@ class Room:
     # The room is available if it has less than 4 players and has not started
     def isAvailable(self):
         if len(self.players) < 4 and self.started is None:
+            return True
+        return False
+
+    def isStarted(self):
+        if self.started is not None:
             return True
         return False
 
@@ -100,3 +98,14 @@ class Room:
             if p.sid == sid:
                 return p
         return None
+
+    def connect(self, player, sid):
+        player.sid = sid
+        self.connected.append(player)
+        return
+
+    def disconnect(self, player):
+        player.sid = None
+        if player in self.connected:
+            self.connected.remove(player)
+        return

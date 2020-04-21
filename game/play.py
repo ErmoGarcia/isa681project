@@ -90,7 +90,7 @@ def gameroom(id):
     session['room'] = id
 
     # Add the new player to the room
-    if current_user.username not in room.players:
+    if current_user.username not in room.getPlayers():
         # Unless the room is full
         if room.isFull():
             flash('The game is full. Try another one.')
