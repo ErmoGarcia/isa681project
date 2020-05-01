@@ -1,3 +1,5 @@
+#!venv/bin/python
+
 from game import create_app
 from game.play import socketio
 

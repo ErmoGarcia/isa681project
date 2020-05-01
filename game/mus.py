@@ -2,25 +2,33 @@ import secrets
 
 from datetime import datetime
 
+
 class Card:
     def __init__(self, rank, suit):
         self.rank = rank
         self.suit = suit
 
     def getValue(self):
-        if rank == 2:
+        if self.rank == 2:
             return 1
-        elif rank == 3:
+        elif self.rank == 3:
             return 10
         else:
             return self.rank
+        return
+
+    def getJuegoValue(self):
+        if self.rank == 8 or self.rank == 9:
+            return 10
+        return self.getValue()
+
 
 class Deck:
     def __init__(self):
         self.cards = []
 
-        ranks = range(1,11)
-        suits = ['Oros','Espadas','Copas','Bastos']
+        ranks = range(1, 11)
+        suits = ['Oros', 'Espadas', 'Copas', 'Bastos']
         for suit in suits:
             for rank in ranks:
                 c = Card(rank, suit)
@@ -29,10 +37,12 @@ class Deck:
     def shuffle(self):
         n = len(self.cards)
         while(n > 0):
-            choice = secret.choice(self.cards[:n])
-            self.cards.append(self.cards.pop(choice))
+            choice = secrets.choice(self.cards[:n])
+            self.cards.remove(choice)
+            self.cards.append(choice)
             n = n-1
         return
+
 
 class Player:
     def __init__(self, name):
@@ -41,13 +51,47 @@ class Player:
         self.afk = False
 
 # Room class: its id is the username of its creator
+
+
+class Round:
+
+    def __init__(self, players, hand):
+        self.phases = ["mus", "grande", "chica", "pares", "juego", "punto"]
+        self.phase = 0
+        self.players = players
+        self.hand = hand
+        self.turn = hand
+
+    def getTurn(self):
+        t = self.players[self.turn]
+        return t
+
+    def nextTurn(self):
+        self.turn = (self.turn + 1) % 4
+        if self.turn == self.hand:
+            self.phase = (self.phase + 1) % 6
+        return self.getTurn()
+
+    def getPhase(self):
+        return self.phases[self.phase]
+
+    def nextPhase(self):
+        self.phase = (self.phase + 1) % 6
+        self.turn = self.hand
+        return self.phases[self.phase]
+
+
 class Room:
 
     def __init__(self, id):
-        self.id = id;
+        self.id = id
+
         self.created = datetime.utcnow()
         self.started = None
         self.finished = None
+
+        self.hand = secrets.randbelow(4)
+        self.round = None
 
     # List of players in the room
     players = []
@@ -109,3 +153,12 @@ class Room:
         if player in self.connected:
             self.connected.remove(player)
         return
+
+    def newRound(self):
+        self.hand = (self.hand + 1) % 4
+        self.round = Round(self.players, self.hand)
+        return self.round
+
+    def getHand(self):
+        h = self.players[self.hand].name
+        return h

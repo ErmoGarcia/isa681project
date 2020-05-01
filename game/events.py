@@ -5,13 +5,22 @@ from flask import session, request
 
 from game.play import socketio, rooms
 
-from flask_socketio import emit, join_room, leave_room, close_room
+from flask_socketio import emit, send, join_room, leave_room, close_room
 from flask_login import current_user
+
 
 def start(room):
     room.started = datetime.utcnow()
     room.deck.shuffle()
-    print(room.deck)
+    for card in room.deck.cards:
+        print(str(card.rank)+' of '+card.suit)
+
+    round = room.newRound()
+    turn = round.getTurn()
+    emit('new_round', {'phase': round.getPhase()}, room=room)
+    emit('new_turn', room=turn.sid)
+    print('1st turn: '+turn.name)
+
     return
 
 
@@ -20,6 +29,7 @@ def finish(room):
     rooms.pop(room.id)
     socketio.close_room(room)
     return
+
 
 # Socket connection event
 @socketio.on('connect')
@@ -51,12 +61,12 @@ def new_connection():
         return True
 
     # Sends event 'user has connected' to everyone in the room
-    emit("new_connection", {"connection" :
-            'User {} has connected.'.format(player.name)},
-            room = room)
+    emit("new_connection", {"connection":
+                            'User {} has connected.'.format(player.name)},
+         room=room)
 
-    #if room.isFull():
-    #    start_game(room)
+    if room.isFull():
+        start(room)
 
 
 @socketio.on('disconnect')
@@ -80,16 +90,17 @@ def new_disconnection():
         time.sleep(60)
 
         if player not in room.connected:
-            #finish(room)
-            emit("game_over", {"game_over" :
-                    'User {} was afk for too long.'.format(player.name)},
-                    room=room)
+            # finish(room)
+            emit("game_over",
+                 {"game_over":
+                  'User {} was afk for too long.'.format(player.name)},
+                 room=room)
 
     room.players.remove(player)
 
-    emit("new_disconnection", {"disconnection" :
-            'User {} has disconnected.'.format(player.name)},
-            room=room)
+    emit("new_disconnection",
+         {"disconnection": 'User {} has disconnected.'.format(player.name)},
+         room=room)
 
     print('disconnected: '+player.name)
 
@@ -98,4 +109,35 @@ def printPlayers(room):
     print('players:')
     for p in room.players:
         print('- '+p.name)
+    return
+
+
+@socketio.on('mus')
+def mus_call():
+    if not current_user.is_authenticated:
+        return False
+
+    # Gets the room where the client is at form the session
+    room = rooms.get(session['room'])
+    if room is None:
+        return False
+
+    player = room.getBySid(request.sid)
+    if player not in room.players:
+        return False
+
+    round = room.round
+    if round is None:
+        return False
+
+    if not player.name == round.getTurn().name:
+        return False
+
+    turn = round.nextTurn()
+    phase = round.getPhase()
+    emit('new_round', {'phase': phase}, room=room)
+    emit('new_turn', room=turn.sid)
+    print('Phase: '+phase)
+    print('Next turn: '+turn.name)
+
     return
