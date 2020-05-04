@@ -11,9 +11,7 @@ from flask_login import current_user
 
 def start(room):
     room.started = datetime.utcnow()
-    room.deck.shuffle()
-    for card in room.deck.cards:
-        print(str(card.rank)+' of '+card.suit)
+    room.makeTeams()
 
     round = room.newRound()
     turn = round.getTurn()
@@ -91,6 +89,7 @@ def new_disconnection():
 
         if player not in room.connected:
             # finish(room)
+            print('game over')
             emit("game_over",
                  {"game_over":
                   'User {} was afk for too long.'.format(player.name)},
