@@ -3,14 +3,14 @@
 ##################
 
 from flask import (
-        Blueprint, request, redirect, render_template, url_for, flash
+    Blueprint, request, redirect, render_template, url_for, flash
 )
 
 from game.forms import LoginForm, RegisterForm
 from game.models import User, db
 
 from flask_bcrypt import Bcrypt
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_login import LoginManager, login_user, logout_user, current_user
 
 # Create the auth blueprint
 bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -36,9 +36,10 @@ def register():
 
             # VALIDATE!!!!!!!
             # User is registered in the DB
-            user = User(username=request.form['username'], password=
-                    bcrypt.generate_password_hash(request.form['password']),
-                    email=request.form['email'])
+            user = User(username=request.form['username'],
+                        password=bcrypt.generate_password_hash(
+                        request.form['password']
+                        ), email=request.form['email'])
             db.session.add(user)
             db.session.commit()
 
@@ -46,7 +47,7 @@ def register():
             flash('New user registered. Try to login.')
             return redirect(url_for('auth.login'))
 
-    return render_template('auth/register.html', form = form)
+    return render_template('auth/register.html', form=form)
 
 
 # Login function: user login
@@ -62,11 +63,15 @@ def login():
 
             # VALIDATE!!!!!!!
             # Introduced user is searched in the DB
-            user = User.query.filter_by(username=request.form['username']).first()
+            user = User.query.filter_by(
+                username=request.form['username']
+            ).first()
 
             # Check if username and password are correct
-            if user is not None and bcrypt.check_password_hash(user.password, 
-                    request.form['password']):
+            if user is not None and bcrypt.check_password_hash(
+                    user.password,
+                    request.form['password']
+            ):
 
                 # Login user (with login extension)
                 login_user(user)
@@ -78,7 +83,7 @@ def login():
             else:
                 error = 'Invalid credentials. Please try again.'
 
-    return render_template('auth/login.html', form = form, error = error)
+    return render_template('auth/login.html', form=form, error=error)
 
 
 # Loguot function: user logout

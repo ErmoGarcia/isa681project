@@ -363,15 +363,17 @@ class Pares(Phase):
         return True
 
     def noPares(self):
+        team = None
         if len(self.players) == 0:
-            return True
+            return True, team
 
         sameTeam = True
         for p1 in self.players:
             i = self.players.index(p1)
+            team = p1.team
             for p2 in self.players[i:]:
                 sameTeam = sameTeam and (p1.team == p2.team)
-        return sameTeam
+        return sameTeam, team
 
     def getWinner(self):
         winner = self.players[self.mano]
@@ -421,15 +423,17 @@ class Juego(Phase):
         return True
 
     def noJuego(self):
+        team = None
         if len(self.players) == 0:
-            return True, True
+            return True, True, team
 
         sameTeam = True
         for p1 in self.players:
             i = self.players.index(p1)
+            team = p1.team
             for p2 in self.players[i:]:
                 sameTeam = sameTeam and (p1.team == p2.team)
-        return sameTeam, False
+        return sameTeam, False, team
 
     def getWinner(self):
         winner = self.players[self.mano]

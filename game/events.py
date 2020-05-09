@@ -7,35 +7,38 @@ from flask import session, request
 from game.play import socketio, rooms
 from game.mus import Card
 
-from flask_socketio import emit, join_room, leave_room, close_room
+from flask_socketio import emit, send, join_room, leave_room, close_room
 from flask_login import current_user
 
 
 def start(room):
     room.started = datetime.utcnow()
     room.makeTeams()
-    new_round(room, True)
+
+    for p in room.players:
+        data = {
+            "players": room.getPlayers(),
+            "player_number": room.players.index(p)
+        }
+        emit('start_game', json.dumps(data), room=p.sid)
+    new_round(room)
     return
 
 
-def new_round(room, newGame=False):
+def new_round(room):
     room.newRound()
-
-    players = room.getPlayers()
     scoreBlue = room.scoreBlue
     scoreRed = room.scoreRed
-    mano = room.getMano().name
+    mano = room.getMano()
 
     data = {
-        "newGame": newGame,
-        "players": players,
         "scoreBlue": scoreBlue,
         "scoreRed": scoreRed,
         "mano": mano
     }
-    emit('start_game', json.dumps(data), room=room)
+    emit('start_round', json.dumps(data), room=room)
 
-    mus_turn(room, players, False)
+    mus_turn(room, False)
     return
 
 
@@ -44,14 +47,21 @@ def new_phase(room):
     phase = round.phase
 
     phase = round.nextPhase()
-    if phase.isPares() and phase.noPares():
+    if phase.isPares() and phase.noPares()[0]:
+        if phase.noPares()[1] is not None:
+            send("Only {} team has pares.".format(phase.noPares()[1]),
+                 room=room)
+        else:
+            send("Nobody has pares.", room=room)
         phase = round.nextPhase()
+
     if phase.isJuego() and phase.noJuego()[0]:
         if phase.noJuego[1]:
+            send("Nobody has juego.", room=room)
             round.thereIsPunto()
+        send("Only {} team has juego.".format(phase.noJuego()[2]), room=room)
         phase = round.nextPhase()
     if phase is None:
-        # aqui que pasa cuando se acaban todas las fases
         show_down(room)
         time.sleep(30)
 
@@ -65,10 +75,10 @@ def new_phase(room):
                 room.scoreBlue = room.scoreBlue + points
             if winner.team == "red":
                 room.scoreRed = room.scoreRed + points
-            # if room.scoreRed >= 40 or room.scoreBlue >= 40:
-            #     finish(room)
+            if room.scoreRed >= 40 or room.scoreBlue >= 40:
+                finish(room)
 
-        new_round(room, False)
+        new_round(room)
         return
     game_turn(room)
     return
@@ -79,7 +89,6 @@ def mus_turn(room, cutMus=False):
         emit('mus_turn', json.dumps({"cutMus": True, "cards": None}),
              room=room)
 
-        # aqui lo que se haga cuando alguien corte mus
         phase = room.round.nextPhase()
         if phase is None:
             return False
@@ -116,7 +125,7 @@ def game_turn(room):
     blueBid = None
     redBid = None
     if phase.lastBid is not None:
-        if phase.lastBid.color == "bule":
+        if phase.lastBid.color == "blue":
             blueBid = phase.lastBid.value
             redBid = phase.prevBid.value
         if phase.lastBid.color == "red":
@@ -141,7 +150,26 @@ def game_turn(room):
         "turn": turn.name
     }
 
+    send("{} speaks.".format(turn.name), room=room)
     emit('game_turn', json.dumps(data), room=room)
+    return
+
+
+def new_envite(room, player, envite, bid):
+    phase = room.round.getPhase()
+    turn = phase.getTurn()
+
+    if envite is not None and bid < envite.value:
+        return False
+
+    send("{player} bets {value}.".format(
+        player=player.name, value=bid
+    ), room=room)
+    phase.envidar(player, bid)
+
+    while(turn.team == phase.lastBid.color):
+        turn = phase.nexTurn()
+    game_turn(room)
     return
 
 
@@ -178,9 +206,14 @@ def show_down(room):
 
 
 def finish(room):
+    if room.scoreBlue > room.scoreRed:
+        send("Game ended: blue team won.", room=room)
+    if room.scoreRed > room.scoreBlue:
+        send("Game ended: red team won.", room=room)
+
     room.finished = datetime.utcnow()
     rooms.pop(room.id)
-    socketio.close_room(room)
+    close_room(room)
     return
 
 
@@ -214,9 +247,7 @@ def new_connection():
         return True
 
     # Sends event 'user has connected' to everyone in the room
-    emit("new_connection", {"connection":
-                            'User {} has connected.'.format(player.name)},
-         room=room)
+    send("User {} has connected.".format(player.name), room=room)
 
     if room.isFull():
         start(room)
@@ -232,7 +263,9 @@ def new_disconnection():
 
     player = room.getBySid(request.sid)
     if player is None:
-        raise Exception('Players should be in the game before they disconnect.')
+        raise Exception(
+            'Players should be in the game before they disconnect.'
+        )
 
     printPlayers(room)
 
@@ -243,20 +276,20 @@ def new_disconnection():
         time.sleep(60)
 
         if player not in room.connected:
-            # finish(room)
             print('game over')
-            emit("game_over",
-                 {"game_over":
-                  'User {} was afk for too long.'.format(player.name)},
+            send("User {} was afk for too long.".format(player.name),
                  room=room)
+            if player.team == "blue":
+                room.scoreRed = 100
+            if player.team == "red":
+                room.scoreBlue = 100
+            finish(room)
+            return
 
     room.players.remove(player)
-
-    emit("new_disconnection",
-         {"disconnection": 'User {} has disconnected.'.format(player.name)},
-         room=room)
-
+    send("User {} has disconnected.".format(player.name), room=room)
     print('disconnected: '+player.name)
+    return
 
 
 def printPlayers(room):
@@ -295,14 +328,17 @@ def client_mus_turn(data):
     data = json.loads(data)
 
     if data.cutMus:
+        send("{} cuts mus.".format(player.name), room=room)
         mus_turn(room, True)
         return True
+    send("{} calls mus.".format(player.name), room=room)
 
     if data.discards is not None:
         for discard in data.discards:
             card = Card(data.discards[0], data.discards[1])
             player.addDiscard(card)
         if phase.allDiscarded():
+            send("Everybody called mus.", room=room)
             phase.discardAll()
             mus_turn(room, False)
 
@@ -345,20 +381,17 @@ def client_game_turn(data):
     envite = phase.lastBid
 
     if data.bid is not None and data.bid > 0:
-        if envite is not None and data.bid < envite.value:
-            return False
-
-        phase.envidar(player, data.bid)
-        while(turn.team == phase.lastBid.color):
-            turn = phase.nexTurn()
-        game_turn(room)
+        new_envite(room, player, envite, data.bid)
         return True
 
     if envite is not None:
         if data.see:
+            send("{} sees the bet.".format(player.name), room=room)
             phase.see()
             new_phase(room)
+            return True
 
+        send("{} passes.".format(player.name), room=room)
         turn = phase.nextTurn()
 
         while(turn.team == envite.color):
@@ -369,6 +402,7 @@ def client_game_turn(data):
         game_turn(room)
         return
 
+    send("{} passes.".format(player.name), room=room)
     if phase.allPassed():
         new_phase()
 

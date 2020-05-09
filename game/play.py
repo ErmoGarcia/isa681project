@@ -2,14 +2,13 @@
 # PLAYING THE GAME #
 ####################
 
-from datetime import datetime
 from uuid import uuid4
 
 from flask import (
-        Blueprint, session, redirect, render_template, url_for, flash
+    Blueprint, session, redirect, render_template, url_for, flash
 )
 
-from game.models import Game, db
+from game.models import Game
 from game.mus import Room
 
 from flask_login import current_user
@@ -24,19 +23,12 @@ socketio = SocketIO()
 # List of active rooms
 rooms = {}
 
-from game.events import *
-
 # New game function: creates a new game
 @bp.route('/newgame')
 def newgame():
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
-
-    # Creates a room with the username that created it as id
-    #creator = current_user.username
-    #if creator not in rooms:
-    #    rooms[creator] = Room(creator)
 
     # Creates a random id
     id = str(uuid4().int)
@@ -68,7 +60,7 @@ def joingame():
             # Saves creation time and player names for each available room
             available.append((room.id, room.created, room.getPlayers()))
 
-    return render_template('play/available.html', rooms = available)
+    return render_template('play/available.html', rooms=available)
 
 
 # Game room function: where the game occurs
@@ -111,4 +103,4 @@ def history():
     # INCOMPLETE
     # Searches for games in the database
     games = Game.query.order_by(Game.started).all()
-    return render_template('play/history.html', games = games)
+    return render_template('play/history.html', games=games)
