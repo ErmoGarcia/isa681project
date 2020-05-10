@@ -39,7 +39,8 @@ def register():
             user = User(username=request.form['username'],
                         password=bcrypt.generate_password_hash(
                         request.form['password']
-                        ), email=request.form['email'])
+                        ), email=request.form['email'],
+                        wins=0, loses=0)
             db.session.add(user)
             db.session.commit()
 

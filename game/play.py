@@ -90,17 +90,3 @@ def gameroom(id):
         room.addPlayer(current_user.username)
 
     return render_template('play/gameroom.html')
-
-
-# MOVE TO INFO???
-# History function
-@bp.route('/history')
-def history():
-    if not current_user.is_authenticated:
-        flash('You need to login first.')
-        return redirect(url_for('auth.login'))
-
-    # INCOMPLETE
-    # Searches for games in the database
-    games = Game.query.order_by(Game.started).all()
-    return render_template('play/history.html', games=games)

@@ -6,6 +6,7 @@ from flask import session, request
 
 from game.play import socketio, rooms
 from game.mus import Card
+from game.models import db, User, Game, Move
 
 from flask_socketio import emit, send, join_room, leave_room, close_room
 from flask_login import current_user
@@ -14,6 +15,8 @@ from flask_login import current_user
 def start(room):
     room.started = datetime.utcnow()
     room.makeTeams()
+
+    start_db(room)
 
     for p in room.players:
         data = {
@@ -49,17 +52,24 @@ def new_phase(room):
     phase = round.nextPhase()
     if phase.isPares() and phase.noPares()[0]:
         if phase.noPares()[1] is not None:
-            send("Only {} team has pares.".format(phase.noPares()[1]),
-                 room=room)
+            msg = "Only {} team has pares.".format(phase.noPares()[1])
+            move_db(room, msg)
+            send(msg, room=room)
         else:
-            send("Nobody has pares.", room=room)
+            msg = "Nobody has pares."
+            move_db(room)
+            send(msg, room=room)
         phase = round.nextPhase()
 
     if phase.isJuego() and phase.noJuego()[0]:
         if phase.noJuego[1]:
-            send("Nobody has juego.", room=room)
+            msg = "Nobody has juego."
+            move_db(room, msg)
+            send(msg, room=room)
             round.thereIsPunto()
-        send("Only {} team has juego.".format(phase.noJuego()[2]), room=room)
+        msg = "Only {} team has juego.".format(phase.noJuego()[2])
+        move_db(room, msg)
+        send(msg, room=room)
         phase = round.nextPhase()
     if phase is None:
         show_down(room)
@@ -132,16 +142,7 @@ def game_turn(room):
             redBid = phase.lastBid.value
             blueBid = phase.prevBid.value
 
-    if phase.isGrande():
-        phase_name = "grande"
-    if phase.isChica():
-        phase_name = "chica"
-    if phase.isPares():
-        phase_name = "pares"
-    if phase.isJuego():
-        phase_name = "juego"
-    if phase.isPunto():
-        phase_name = "punto"
+    phase_name = phase.getName()
 
     data = {
         "phase": phase_name,
@@ -150,7 +151,9 @@ def game_turn(room):
         "turn": turn.name
     }
 
-    send("{} speaks.".format(turn.name), room=room)
+    msg = "{} speaks.".format(turn.name)
+    move_db(room, msg)
+    send(msg, room=room)
     emit('game_turn', json.dumps(data), room=room)
     return
 
@@ -162,9 +165,9 @@ def new_envite(room, player, envite, bid):
     if envite is not None and bid < envite.value:
         return False
 
-    send("{player} bets {value}.".format(
-        player=player.name, value=bid
-    ), room=room)
+    msg = "{player} bets {value}.".format(player=player.name, value=bid)
+    move_db(room, msg)
+    send(msg, room=room)
     phase.envidar(player, bid)
 
     while(turn.team == phase.lastBid.color):
@@ -207,11 +210,34 @@ def show_down(room):
 
 def finish(room):
     if room.scoreBlue > room.scoreRed:
-        send("Game ended: blue team won.", room=room)
+        msg = "Game ended: blue team won."
+        move_db(room, msg)
+        send(msg, room=room)
+
+        for p in room.players:
+            user = User.query.filter_by(username=p.name).first()
+            if p.team == "blue":
+                user.wins = user.wins + 1
+            elif p.team == "red":
+                user.losses = user.losses + 1
+
     if room.scoreRed > room.scoreBlue:
-        send("Game ended: red team won.", room=room)
+        msg = "Game ended: red team won."
+        move_db(room, msg)
+        send(msg, room=room)
+
+        for p in room.players:
+            user = User.query.filter_by(username=p.name).first()
+            if p.team == "red":
+                user.wins = user.wins + 1
+            elif p.team == "blue":
+                user.losses = user.losses + 1
 
     room.finished = datetime.utcnow()
+    game = Game.query.filter_by(room_id=room.id).first()
+    game.finished = room.finished
+    db.session.commit()
+
     rooms.pop(room.id)
     close_room(room)
     return
@@ -327,18 +353,24 @@ def client_mus_turn(data):
     # input validation!!!!
     data = json.loads(data)
 
-    if data.cutMus:
-        send("{} cuts mus.".format(player.name), room=room)
+    if bool(data.cutMus):
+        msg = "{} cuts mus.".format(player.name)
+        move_db(room, msg)
+        send(msg, room=room)
         mus_turn(room, True)
         return True
-    send("{} calls mus.".format(player.name), room=room)
+    msg = "{} calls mus.".format(player.name)
+    move_db(room, msg)
+    send(msg, room=room)
 
     if data.discards is not None:
         for discard in data.discards:
-            card = Card(data.discards[0], data.discards[1])
+            card = Card(int(data.discards[0]), data.discards[1])
             player.addDiscard(card)
         if phase.allDiscarded():
-            send("Everybody called mus.", room=room)
+            msg = "Everybody called mus."
+            move_db(room, msg)
+            send(msg, room=room)
             phase.discardAll()
             mus_turn(room, False)
 
@@ -380,18 +412,22 @@ def client_game_turn(data):
 
     envite = phase.lastBid
 
-    if data.bid is not None and data.bid > 0:
-        new_envite(room, player, envite, data.bid)
+    if int(data.bid) is not None and int(data.bid) > 0:
+        new_envite(room, player, envite, int(data.bid))
         return True
 
     if envite is not None:
-        if data.see:
-            send("{} sees the bet.".format(player.name), room=room)
+        if bool(data.see):
+            msg = "{} sees the bet.".format(player.name)
+            move_db(room, msg)
+            send(msg, room=room)
             phase.see()
             new_phase(room)
             return True
 
-        send("{} passes.".format(player.name), room=room)
+        msg = "{} passes.".format(player.name)
+        move_db(room, msg)
+        send(msg, room=room)
         turn = phase.nextTurn()
 
         while(turn.team == envite.color):
@@ -402,9 +438,48 @@ def client_game_turn(data):
         game_turn(room)
         return
 
-    send("{} passes.".format(player.name), room=room)
+    msg = "{} passes.".format(player.name)
+    move_db(room, msg)
+    send(msg, room=room)
     if phase.allPassed():
         new_phase()
 
     game_turn(room)
     return True
+
+
+def start_db(room):
+    game = Game(room_id=room.id, started=room.started)
+    for p in room.plyers:
+        user = User.query.filter_by(username=p.name).first()
+        game.players.append(user)
+    db.session.add(game)
+    db.session.commit()
+    return
+
+
+def move_db(room, msg):
+    game = Game.query.filter_by(room_id=room.id).first()
+    timestamp = datetime.utcnow()
+    phase = room.round.getPhase().getName()
+    message = msg
+
+    cards = []
+    for i in range(0, 4):
+        for j in range(0, 4):
+            card = room.players[i].cards[j]
+            cards.append('{0:0>2}{1}.jpg'.format(card.rank, card.suit[0]))
+
+    move = Move(timestamp=timestamp, phase=phase, message=message,
+                scoreBlue=room.scoreBlue, scoreRed=room.scoreRed,
+                card11=cards[0], card12=cards[1], card13=cards[2],
+                card14=cards[3], card21=cards[4], card22=cards[5],
+                card23=cards[6], card24=cards[7], card31=cards[8],
+                card32=cards[9], card33=cards[10], card34=cards[11],
+                card41=cards[12], card42=cards[13], card43=cards[14],
+                card44=cards[15])
+
+    game.moves.append(move)
+    db.session.add(move)
+    db.session.commit()
+    return

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Statistics{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<h3>My stats:</h3>
+<ul class="list-group">
+  <li class="list-group-item"><strong>{{ current_user.username }}</strong></li>
+  <li class="list-group-item">Total number of wins: {{ stats.get(current_user.username)[0] }}</li>
+  <li class="list-group-item">Total number of losses: {{ stats.get(current_user.username)[1] }}</li>
+  <li class="list-group-item">Wins percentage: {{ stats.get(current_user.username)[2] }}</li>
+</ul>
+{{ stats.pop(current_user.username) }}
+<br>
+<h3>Every other user stats:</h3>
+{% for user in stats %}
+<ul class="list-group">
+  <li class="list-group-item"><strong>{{ user }}</strong></li>
+  <li class="list-group-item">Total number of wins: {{ stats.get(user)[0] }}</li>
+  <li class="list-group-item">Total number of losses: {{ stats.get(user)[1] }}</li>
+  <li class="list-group-item">Wins percentage: {{ stats.get(user)[2] }}</li>
+</ul>
+{% endfor %}
+{% endblock %}

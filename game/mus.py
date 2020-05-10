@@ -35,7 +35,7 @@ class Deck:
         self.discards = []
 
         ranks = range(1, 11)
-        suits = ['Oros', 'Espadas', 'Copas', 'Bastos']
+        suits = ['oros', 'espadas', 'copas', 'bastos']
         for suit in suits:
             for rank in ranks:
                 c = Card(rank, suit)
@@ -214,6 +214,9 @@ class Mus():
         self.deck.deal(self.players)
         return
 
+    def getName(self):
+        return "mus"
+
 
 class Phase:
     def __init__(self, players, mano):
@@ -314,6 +317,9 @@ class Grande(Phase):
             return self.defeat(winner, rival)
         return False
 
+    def getName(self):
+        return "grande"
+
 
 class Chica(Phase):
 
@@ -348,6 +354,9 @@ class Chica(Phase):
             self.winner = self.getWinner()
             self.points = 1
         return self.winner, self.points
+
+    def getName(self):
+        return "chica"
 
 
 class Pares(Phase):
@@ -409,6 +418,9 @@ class Pares(Phase):
                 self.points = self.points + p.pointsPares()
         return self.winner, self.points
 
+    def getName(self):
+        return "pares"
+
 
 class Juego(Phase):
     def __init__(self, players, mano):
@@ -463,6 +475,9 @@ class Juego(Phase):
                 self.points = self.points + p.pointsJuego()
         return self.winner, self.points
 
+    def getName(self):
+        return "juego"
+
 
 class Punto(Phase):
 
@@ -489,6 +504,9 @@ class Punto(Phase):
             self.winner = self.getWinner()
         self.points = self.points + 1
         return self.winner, self.points
+
+    def getName(self):
+        return "punto"
 
 
 # A game round

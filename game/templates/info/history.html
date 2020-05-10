@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Game History{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+{% for game in games %}
+<a href='{{ url_for('info.history', id=game.room_id) }}' class="list-group-item list-group-item-action">
+  <div class="d-flex w-100 justify-content-between">
+    <h5 class="mb-1">Game</h5>
+    <small>from {{ game.started.strftime("%l %b %d") }} to {{ game.finished.strftime("%l %b %d") }}</small>
+ </div>
+ {% for player in game.players %}
+ <p class="mb-1">Player: {{ player.username }}</p>
+ {% endfor %}
+</a>
+{% endfor %}
+{% endblock %}
