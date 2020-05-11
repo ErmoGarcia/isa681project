@@ -32,7 +32,7 @@
         <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
           {% if current_user.is_authenticated %}
             {{ render_nav_item('index', '{}'.format(current_user.username), use_li=True) }}
-            {{ render_nav_item('info.history', 'History', use_li=True) }}
+            {{ render_nav_item('play.history', 'History', use_li=True) }}
             {{ render_nav_item('auth.logout', 'Logout', use_li=True) }}
           {% else %}
             {{ render_nav_item('index', 'Home', use_li=True) }}
@@ -44,57 +44,7 @@
     </nav>
     <br><br>
 
-    <div class="menu" style="margin-left: 50px; margin-top: 300px; float:left; width:18%">
-      <table>
-        <tbody>
-          <tr>
-              <td class="text-center">
-                 <button id='mus' type='submit' style='visibility: hidden;'>Mus</button><br><br>
-              </td>
-          </tr>
-          <tr>
-              <td class="text-center">
-                 <button id='noMus' type='submit' style='visibility: hidden;'>No Mus</button><br><br>
-              </td>
-          </tr>
-          <tr>
-              <td class="text-center">
-                 <button id='pass' type='submit' style='visibility: hidden;'>Pass</button><br><br>
-              </td>
-          </tr>
-          <tr>
-              <td class="text-center">
-                 <br><br><br>
-              </td>
-          </tr>
-          <tr>
-              <td>
-                  <form id='myForm' action="" style='visibility: hidden;'>
-                    <label for="name" style="text-align: center;">Bid</label><br>
-                    <input type="int" id="bid" value="Set your bid amount"><br><br>
-                    <input type="submit" value="Submit">
-                  </form>
-              </td>
-          </tr>
-          <tr>
-              <td class="text-center">
-                 <br>
-                 <div id='blueTeam' style='color:blue;'>
-                 </div>
-              </td>
-          </tr>
-          <tr>
-              <td class="text-center">
-                 <br>
-                 <div id='redTeam' style='color:red;'>
-                 </div>
-          </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="container" style="width: 100%; float: left;">
+    <div class="container">
       {% block header %}{% endblock %}
       {% block content %}{% endblock %}
 

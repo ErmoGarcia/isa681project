@@ -523,10 +523,11 @@ class Round:
         self.deck.deal(self.players)
 
         # Phases in the round
-        self.phases = [Juego(self.players, self.mano),
-                       Pares(self.players, self.mano),
-                       Chica(self.players, self.mano),
-                       Grande(self.players, self.mano)]
+        # self.phases = [Juego(self.players, self.mano),
+        #                Pares(self.players, self.mano),
+        #                Chica(self.players, self.mano),
+        #                Grande(self.players, self.mano)]
+        self.phases = ['juego', 'pares', 'chica', 'grande']
         self.phase = Mus(self.players, self.deck)
 
         self.results = []
@@ -541,7 +542,17 @@ class Round:
             self.results.append(self.phase.getResults())
 
         if len(self.phases) > 0:
-            self.phase = self.phases.pop()
+            name = self.phases.pop()
+
+            if name == 'juego':
+                self.phase = Juego(self.players, self.mano)
+            if name == 'pares':
+                self.phase = Pares(self.players, self.mano)
+            if name == 'chica':
+                self.phase = Chica(self.players, self.mano)
+            if name == 'grande':
+                self.phase = Grande(self.players, self.mano)
+
             return self.phase
         return None
 

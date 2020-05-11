@@ -40,7 +40,7 @@ def register():
                         password=bcrypt.generate_password_hash(
                         request.form['password']
                         ), email=request.form['email'],
-                        wins=0, loses=0)
+                        wins=0, losses=0)
             db.session.add(user)
             db.session.commit()
 

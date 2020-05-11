@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h1>{% block title %}New Game{% endblock %}</h1>
+{% endblock %}
+
+
+
+{% block content %}
+<ul id='connections'></ul>
+<div id='messages_title' style="width:20%; float: right; display: inline-block; font-size: 10; font-weight: bold">New Messages</div>
+<div id='messages' style="width:20%; float: right; clear:right; word-wrap: break-word;"></div>
+<div id='gameboard' style="width:80%">
+	<h3 id='phase'></h3>
+	<div id='player3' class="text-center" style="width:100%; height:50px; margin-top: 25px;">
+	</div>
+
+	<table style="width:100%">
+
+		<tbody>
+			<tr>
+				<td id='player4' class="text-center" style="width:20%; transform: rotate(90deg);"></td>
+				<td style="width:60%">
+					<table style="width:100%">
+						<tbody>
+							<tr>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive" /></td>
+							</tr>
+							<tr>
+								<td class="text-center"><img style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+							</tr>
+							<tr>
+								<td class="text-center"><img style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+							</tr>
+							<tr>
+								<td class="text-center"><img style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+							</tr>
+							<tr>
+								<td class="text-center"><img style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td class="text-center"><img style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+							</tr>
+							<tr>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+								<td id='cards' class="text-center"><img id ='card1' style="width:100%;" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}">
+								</td>
+								<td id='cards' class="text-center"><img id ='card2' style="width:100%;" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td id='cards' class="text-center"><img id ='card3' style="width:100%;" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td id='cards' class="text-center"><img id ='card4' style="width:100%;" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
+								<td class="text-center"><img style="width:100%;" class="img-responsive"></td>
+							</tr>
+
+						</tbody>
+					</table>
+				</td>
+				<td id='player2' class="text-center" style="width:20%; transform: rotate(270deg);"></td>
+			</tr>
+		</tbody>
+	</table>
+
+	<div id='player1' class="text-center" style="width:100%; height:50px; margin-top: 25px;">
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
+<script src="{{ url_for('static', filename='gameroom.js') }}"></script>
+{% endblock %}
