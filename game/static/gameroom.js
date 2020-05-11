@@ -257,6 +257,7 @@ $(document).ready(function() {
       $('#currentBlueBid').text(data.blueBid);
       $('#currentRedBid').text(data.redBid);
 
+      console.log(data.turn)
       if ($('#player1').text().localeCompare(data.turn) == 0){
           $('#pass').css('visibility', 'hidden');
           $('#acceptBid').css('visibility', 'hidden');

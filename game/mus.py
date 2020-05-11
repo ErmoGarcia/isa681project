@@ -10,6 +10,15 @@ class Card:
         self.rank = rank
         self.suit = suit
 
+        if self.suit == 'o':
+            self.suit = 'oros'
+        elif self.suit == 'b':
+            self.suit = 'bastos'
+        elif self.suit == 'e':
+            self.suit = 'espadas'
+        elif self.suit == 'c':
+            self.suit = 'copas'
+
     # The actual value of the card
     def getValue(self):
         if self.rank == 2:

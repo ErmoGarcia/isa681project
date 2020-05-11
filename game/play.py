@@ -125,6 +125,7 @@ def new_connection():
 
     # If player was just afk, do nothing else
     if room.isStarted():
+        reconnect(room, player)
         return True
 
     # Sends event 'user has connected' to everyone in the room
@@ -140,13 +141,13 @@ def new_disconnection():
     # Gets the room where the client was at form the session
     room = rooms.get(session['room'])
     if room is None:
-        raise Exception('No room available for disconnection.')
+        print('No room available for disconnection.')
+        return
 
     player = room.getBySid(request.sid)
     if player is None:
-        raise Exception(
-            'Players should be in the game before they disconnect.'
-        )
+        print('Players should be in the game before they disconnect.')
+        return
 
     printPlayers(room)
 
@@ -222,16 +223,6 @@ def client_mus_turn(data):
         for discard in data['discards']:
             rank = int(discard[0])
             suit = discard[1]
-
-            if suit == 'o':
-                suit = 'oros'
-            elif suit == 'b':
-                suit = 'bastos'
-            elif suit == 'e':
-                suit = 'espadas'
-            elif suit == 'c':
-                suit = 'copas'
-
             card = Card(rank, suit)
             player.addDiscard(card)
         if phase.allDiscarded():
@@ -335,17 +326,14 @@ def start(room):
 
 def new_round(room):
     room.newRound()
-    scoreBlue = room.scoreBlue
-    scoreRed = room.scoreRed
-
     mano = room.getMano().name
     msg = "{} is mano this round.".format(mano)
     # move_db(room, msg)
     send(msg, room=room)
 
     data = {
-        "scoreBlue": scoreBlue,
-        "scoreRed": scoreRed,
+        "scoreBlue": room.scoreBlue,
+        "scoreRed": room.scoreRed,
     }
     emit('start_round', data, room=room)
 
@@ -410,8 +398,8 @@ def mus_turn(room, cutMus=False):
         if not phase.isGrande():
             return False
 
-        emit('mus_turn', {"cutMus": True, "cards": None},
-             room=room)
+        # emit('mus_turn', {"cutMus": True, "cards": None},
+        #      room=room)
 
         game_turn(room)
         return
@@ -542,6 +530,58 @@ def finish(room):
 
     rooms.pop(room.id)
     close_room(room)
+    return
+
+
+def reconnect(room, player):
+    data = {
+        "scoreBlue": room.scoreBlue,
+        "scoreRed": room.scoreRed,
+        "players": room.getPlayers(),
+        "player_number": room.players.index(player)
+    }
+    emit('start_game', data, room=player.sid)
+
+    data = {
+        "scoreBlue": room.scoreBlue,
+        "scoreRed": room.scoreRed,
+    }
+    emit('start_round', data, room=player.sid)
+
+    cards = []
+    for c in player.cards:
+        cards.append([c.rank, c.suit])
+
+    data_mus = {
+        "cutMus": False,
+        "cards": cards
+    }
+    emit('mus_turn', data_mus, room=player.sid)
+
+    phase = room.round.getPhase()
+    if not phase.isMus():
+        turn = phase.getTurn()
+
+        blueBid = None
+        redBid = None
+        if phase.lastBid is not None:
+            if phase.lastBid.color == "blue":
+                blueBid = phase.lastBid.value
+                redBid = phase.prevBid.value
+            if phase.lastBid.color == "red":
+                redBid = phase.lastBid.value
+                blueBid = phase.prevBid.value
+
+        phase_name = phase.getName()
+
+        data = {
+            "phase": phase_name,
+            "blueBid": blueBid,
+            "redBid": redBid,
+            "turn": turn.name
+        }
+
+        emit('game_turn', data, room=player.sid)
     return
 
 
