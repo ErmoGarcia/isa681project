@@ -62,7 +62,9 @@ class Deck:
     def pop(self):
         if len(self.cards) == 0:
             self.reshuffle()
-        return self.cards.pop()
+        card = self.cards.pop()
+        self.discards.append(card)
+        return card
 
     # Deal cards to all players unil thir hands are full
     def deal(self, players):
@@ -110,10 +112,10 @@ class Player:
     # Adds one card to the list of discards
     def discard(self):
         while(len(self.discards) > 0):
-            card = self.discards.pop()
-            if card not in self.cards:
-                return
-            self.cards.remove(card)
+            discard = self.discards.pop()
+            for card in self.cards:
+                if discard.rank == card.rank and discard.suit == card.suit:
+                    self.cards.remove(card)
         return
 
     def getGrande(self):

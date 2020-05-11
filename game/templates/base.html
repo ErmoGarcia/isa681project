@@ -44,7 +44,7 @@
     </nav>
     <br><br>
 
-    <div class="menu" style="margin-left: 50px; margin-top: 275px; float:left; width:18%">
+    <div class="menu" style="margin-left: 50px; margin-top: 230px; float:left; width:18%">
       <table>
         <tbody>
           <tr>
@@ -54,7 +54,7 @@
           </tr>
           <tr>
               <td class="text-center">
-                 <button id='noMus' type='submit' style='visibility: hidden;'>No Mus</button><br><br>
+                 <button id='noMus' type='submit' style='visibility: hidden;'>No Mus</button><br><br><br>
               </td>
           </tr>
           <tr>
@@ -63,6 +63,10 @@
               </td>
           </tr>
           <tr>
+              <td class="text-center">
+                 <button id='acceptBid' type='submit' style='visibility: hidden;'>Accept Bid</button><br><br>
+              </td>
+          </tr>
           <tr>
               <td class="text-center">
                  <button id='envido' type='submit' style='visibility: hidden;'>Envido</button><br><br>
@@ -75,10 +79,10 @@
           </tr>
           <tr>
               <td>
-                  <form id='myForm' action="" style='visibility: hidden;'>
+                  <form id='myForm' style='visibility: hidden;'>
                     <label for="name" style="text-align: center;">Bid</label><br>
-                    <input type="int" id="bid" value="Set your bid amount"><br><br>
-                    <input type="submit" value="Submit">
+                    <input type="int" id="bid"><br><br>
+                    <input id='submit' type="button" value="Submit">
                   </form>
               </td>
           </tr>

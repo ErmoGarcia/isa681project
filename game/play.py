@@ -208,7 +208,7 @@ def client_mus_turn(data):
     # input validation!!!!
     # data
 
-    if bool(data.cutMus):
+    if bool(data['cutMus']):
         msg = "{} cuts mus.".format(player.name)
         move_db(room, msg)
         send(msg, room=room)
@@ -218,9 +218,21 @@ def client_mus_turn(data):
     move_db(room, msg)
     send(msg, room=room)
 
-    if data.discards is not None:
-        for discard in data.discards:
-            card = Card(int(data.discards[0]), data.discards[1])
+    if data['discards'] is not None:
+        for discard in data['discards']:
+            rank = int(discard[0])
+            suit = discard[1]
+
+            if suit == 'o':
+                suit = 'oros'
+            elif suit == 'b':
+                suit = 'bastos'
+            elif suit == 'e':
+                suit = 'espadas'
+            elif suit == 'c':
+                suit = 'copas'
+
+            card = Card(rank, suit)
             player.addDiscard(card)
         if phase.allDiscarded():
             msg = "Everybody called mus."
@@ -267,12 +279,12 @@ def client_game_turn(data):
 
     envite = phase.lastBid
 
-    if int(data.bid) is not None and int(data.bid) > 0:
-        new_envite(room, player, envite, int(data.bid))
+    if int(data['bid']) is not None and int(data['bid']) > 0:
+        new_envite(room, player, envite, int(data['bid']))
         return True
 
     if envite is not None:
-        if bool(data.see):
+        if bool(data['see']):
             msg = "{} sees the bet.".format(player.name)
             move_db(room, msg)
             send(msg, room=room)
@@ -392,20 +404,14 @@ def new_phase(room):
 
 def mus_turn(room, cutMus=False):
     if cutMus:
-        emit('mus_turn', {"cutMus": True, "cards": None},
-             room=room)
-
         phase = room.round.nextPhase()
         if phase is None:
             return False
         if not phase.isGrande():
             return False
 
-        data_mus = {
-            "cutMus": True,
-            "cards": None
-        }
-        emit('mus_turn', data_mus, room=room)
+        emit('mus_turn', {"cutMus": True, "cards": None},
+             room=room)
 
         game_turn(room)
         return
@@ -413,7 +419,7 @@ def mus_turn(room, cutMus=False):
     for p in room.players:
         cards = []
         for c in p.cards:
-            cards.append((c.rank, c.suit))
+            cards.append([c.rank, c.suit])
 
         data_mus = {
             "cutMus": False,
