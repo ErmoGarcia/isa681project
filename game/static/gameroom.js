@@ -31,10 +31,11 @@ $(document).ready(function() {
   $('#mus').css('visibility', 'visible');
   $('#noMus').css('visibility', 'visible');
   $('#pass').css('visibility', 'visible');
+  $('#envido').css('visibility', 'visible');
   $('#myForm').css('visibility', 'visible');
 
 
-
+  
   //On click reponses
   $('#card1').click(function(){
     if(card1OnClick == false){
@@ -93,22 +94,28 @@ $(document).ready(function() {
   });
 
 
-
   $('#mus').click(function(){
       $('#mus').hide();
       $('#noMus').hide();
       arrayMus = Array.from(cardsSet);
       var myJson = JSON.stringify(arrayMus);
       jsonToSend = '{"cutMus": ' + 'false, "discards": "'+ myJson + '}';
-      socket.emit(myJson);
+      socket.emit('client_mus_turn', jsonToSend);
   });
 
   $('#noMus').click(function(){
       $('#noMus').hide();
       $('#mus').hide();
-      var myJson = JSON.stringify()
+      var myJson = JSON.stringify();
       jsonToSend = '{"cutMus": ' + 'true, "discards": ""';
-      socket.emit(jsonToSend);
+      socket.emit('client_mus_turn',jsonToSend);
+  });
+
+  $('#pass').click(function(){
+      arrayMus = Array.from(cardsSet);
+      var myJson = JSON.stringify(arrayMus);
+      jsonToSend = '{"cutMus": ' + 'false, "discards": "'+ myJson + '}';
+      socket.emit(myJson);
   });
 
     socket.on('start_game', function(data){
@@ -117,49 +124,48 @@ $(document).ready(function() {
       var i = data.player_number;
       $('#player1').append(data.players[i]);
       if(i==3){
-        $('#player1').css('color', 'red');
+        $('#player1').css('color', 'red');        
         $('#player2').text(data.players[0]);
-        $('#player2').css('color', 'blue');
+        $('#player2').css('color', 'blue');      
         $('#player3').text(data.players[1]);
-        $('#player3').css('color', 'red');
+        $('#player3').css('color', 'red');      
         $('#player4').text(data.players[2]);
-        $('#player4').css('color', 'blue');
+        $('#player4').css('color', 'blue');      
 
       }
       else if(i==2){
-        $('#player1').css('color', 'blue');
+        $('#player1').css('color', 'blue');      
         $('#player2').text(data.players[3]);
-        $('#player2').css('color', 'red');
+        $('#player2').css('color', 'red');      
         $('#player3').text(data.players[0]);
-        $('#player3').css('color', 'blue');
+        $('#player3').css('color', 'blue');      
         $('#player4').text(data.players[1]);
-        $('#player4').css('color', 'red');
+        $('#player4').css('color', 'red');      
       }
       else if(i==1){
-        $('#player1').css('color', 'red');
+        $('#player1').css('color', 'red');      
         $('#player2').text(data.players[2]);
-        $('#player2').css('color', 'blue');
+        $('#player2').css('color', 'blue');      
         $('#player3').text(data.players[3]);
-        $('#player3').css('color', 'red');
+        $('#player3').css('color', 'red');      
         $('#player4').text(data.players[1]);
-        $('#player4').css('color', 'blue');
+        $('#player4').css('color', 'blue');      
       }
       else {
-        $('#player1').css('color', 'blue');
+        $('#player1').css('color', 'blue');      
         $('#player2').text(data.players[1]);
-        $('#player2').css('color', 'red');
+        $('#player2').css('color', 'red');      
         $('#player3').text(data.players[2]);
-        $('#player3').css('color', 'blue');
+        $('#player3').css('color', 'blue');      
         $('#player4').text(data.players[3]);
-        $('#player4').css('color', 'red');
+        $('#player4').css('color', 'red');      
       }
 
-
-      $('#mano').text(data.players[data.mano]);
+      $('#myHeader').text('');
     });
 
   socket.on('message', function(data){
-      $('#messages').append('<p>'+data+'</p>');
+      $('#messages').append(data);
   });
 
   socket.on('mus_turn', function(data){
@@ -218,6 +224,13 @@ $(document).ready(function() {
         }
       });
     });
+
+  socket.on('game_turn', function(data){
+      $('#phase').text("Phase: "+data.phase);
+      $('#mus').hide();
+      $('#noMus').hide();
+
+  });
 
 
   socket.on('new_connection', function(data){

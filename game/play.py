@@ -5,7 +5,6 @@
 
 from datetime import datetime
 from uuid import uuid4
-import json
 import time
 
 from flask import (
@@ -207,7 +206,7 @@ def client_mus_turn(data):
         return False
 
     # input validation!!!!
-    data = json.loads(data)
+    # data
 
     if bool(data.cutMus):
         msg = "{} cuts mus.".format(player.name)
@@ -264,7 +263,7 @@ def client_game_turn(data):
         return False
 
     # input validation!!!!!
-    data = json.loads(data)
+    # data
 
     envite = phase.lastBid
 
@@ -317,7 +316,7 @@ def start(room):
             "players": room.getPlayers(),
             "player_number": room.players.index(p)
         }
-        emit('start_game', json.dumps(data), room=p.sid)
+        emit('start_game', data, room=p.sid)
     new_round(room)
     return
 
@@ -329,14 +328,14 @@ def new_round(room):
 
     mano = room.getMano().name
     msg = "{} is mano this round.".format(mano)
-    move_db(room, msg)
+    # move_db(room, msg)
     send(msg, room=room)
 
     data = {
         "scoreBlue": scoreBlue,
         "scoreRed": scoreRed,
     }
-    emit('start_round', json.dumps(data), room=room)
+    emit('start_round', data, room=room)
 
     mus_turn(room, False)
     return
@@ -393,7 +392,7 @@ def new_phase(room):
 
 def mus_turn(room, cutMus=False):
     if cutMus:
-        emit('mus_turn', json.dumps({"cutMus": True, "cards": None}),
+        emit('mus_turn', {"cutMus": True, "cards": None},
              room=room)
 
         phase = room.round.nextPhase()
@@ -406,7 +405,7 @@ def mus_turn(room, cutMus=False):
             "cutMus": True,
             "cards": None
         }
-        emit('mus_turn', json.dumps(data_mus), room=room)
+        emit('mus_turn', data_mus, room=room)
 
         game_turn(room)
         return
@@ -420,7 +419,7 @@ def mus_turn(room, cutMus=False):
             "cutMus": False,
             "cards": cards
         }
-        emit('mus_turn', json.dumps(data_mus), room=p.sid)
+        emit('mus_turn', data_mus, room=p.sid)
 
     return
 
@@ -451,7 +450,7 @@ def game_turn(room):
     msg = "{} speaks.".format(turn.name)
     move_db(room, msg)
     send(msg, room=room)
-    emit('game_turn', json.dumps(data), room=room)
+    emit('game_turn', data, room=room)
     return
 
 
@@ -501,7 +500,7 @@ def show_down(room):
         "punto": punto
     }
 
-    emit('show_down', json.dumps(data), room=room)
+    emit('show_down', data, room=room)
     return
 
 
@@ -558,6 +557,7 @@ def move_db(room, msg):
 
     cards = []
     for i in range(0, 4):
+
         for j in range(0, 4):
             card = room.players[i].cards[j]
             cards.append('{0:0>2}{1}.jpg'.format(card.rank, card.suit[0]))
