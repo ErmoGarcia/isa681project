@@ -131,32 +131,39 @@ class Player:
         values = []
         for c in self.cards:
             values.append(c.getValue())
-        return values.sort(reverse=True)
+        values.sort()
+        print('Grande de '+self.name+': '+self.name+': '+str(values))
+        return values
 
     def getChica(self):
         values = []
         for c in self.cards:
             values.append(c.getValue())
-        return values.sort()
+        values.sort(reverse=True)
+        print('Chica de '+self.name+': '+str(values))
+        return values
 
     # Gets a list of the cards of the hand that form pares
     def getPares(self):
         pares = []
+        for c in self.cards:
+            pares.append(c.getValue())
+
         for i in range(0, 4):
-            for j in range(i+1, 4):
-                c1 = self.cards[i].getValue()
-                c2 = self.cards[j].getValue()
-                if c1 == c2:
-                    if c1 not in pares:
-                        pares.append(c1)
-                    pares.append(c2)
-        return pares.sort(reverse=True)
+            c = pares.pop()
+            if c in pares:
+                pares.insert(0, c)
+
+        pares.sort()
+        print('Pares de '+self.name+': '+str(pares))
+        return pares
 
     # Gets the hand's Juego
     def getJuego(self):
         juego = 0
         for c in self.cards:
             juego = juego + c.getJuegoValue()
+        print('Juego de '+self.name+': '+str(juego))
         return juego
 
     # True if the hand contains pares
@@ -174,7 +181,7 @@ class Player:
     # True if the hand has Juego
     def hasJuego(self):
         juego = self.getJuego()
-        return juego > 31
+        return juego >= 31
 
     # The amount of points from pares in the hand
     def pointsPares(self):
@@ -258,8 +265,8 @@ class Phase:
     def isJuego(self):
         return False
 
-    def isPunto(self):
-        return False
+    # def isPunto(self):
+    #     return False
 
     def allPassed(self):
         return (self.turn == self.mano)
@@ -281,6 +288,20 @@ class Phase:
         self.lastBid = envite
         return envite
 
+    def getLastBids(self):
+        blueBid = 0
+        redBid = 0
+        if self.lastBid is not None:
+            if self.lastBid.color == "blue":
+                blueBid = self.lastBid.value
+                if self.prevBid is not None:
+                    redBid = self.prevBid.value
+            if self.lastBid.color == "red":
+                redBid = self.lastBid.value
+                if self.prevBid is not None:
+                    blueBid = self.prevBid.value
+        return blueBid, redBid
+
     def fold(self):
         self.winner = self.lastBid.player
         self.points = 1
@@ -296,7 +317,7 @@ class Phase:
     def getWinner(self):
         return
 
-    def getResult(self):
+    def getResults(self):
         return self.winner, self.points
 
 
@@ -310,9 +331,11 @@ class Grande(Phase):
         i = (self.mano + 1) % 4
         while(i != self.mano):
             rival = self.players[i]
+            print(winner.name+' vs '+rival.name)
             if self.defeat(winner.getGrande(), rival.getGrande()):
                 winner = rival
-                i = (self.mano + 1) % 4
+            print('Winner: '+winner.name)
+            i = (i + 1) % 4
         return winner
 
     def defeat(self, winner, rival):
@@ -342,9 +365,11 @@ class Chica(Phase):
         i = (self.mano + 1) % 4
         while(i != self.mano):
             rival = self.players[i]
+            print(winner.name+' vs '+rival.name)
             if self.defeat(winner.getChica(), rival.getChica()):
                 winner = rival
-                i = (self.mano + 1) % 4
+            print('Winner: '+winner.name)
+            i = (i + 1) % 4
         return winner
 
     def defeat(self, winner, rival):
@@ -360,7 +385,7 @@ class Chica(Phase):
             return self.defeat(winner, rival)
         return False
 
-    def getResult(self):
+    def getResults(self):
         if self.points == 0:
             self.winner = self.getWinner()
             self.points = 1
@@ -371,38 +396,41 @@ class Chica(Phase):
 
 
 class Pares(Phase):
-    def __init__(self, players, mano):
-        super().__init__(players, mano)
-        self.players = players.copy()
-        for p in self.players:
-            if p.hasPares() is None:
-                self.players.remove(p)
-        self.mano = self.mano % len(self.players)
 
     def isPares(self):
         return True
 
-    def noPares(self):
-        team = None
-        if len(self.players) == 0:
-            return True, team
+    def nextTurn(self):
+        self.turn = (self.turn + 1) % len(self.players)
+        return self.getTurn()
 
-        sameTeam = True
-        for p1 in self.players:
-            i = self.players.index(p1)
-            team = p1.team
-            for p2 in self.players[i:]:
-                sameTeam = sameTeam and (p1.team == p2.team)
-        return sameTeam, team
+    def noPares(self):
+        teams = []
+        for p in self.players:
+            teams.append(p.team)
+        return teams
+
+    def recalculatePlayers(self):
+        for i in range(0, 4):
+            p = self.players.pop()
+            if p.hasPares() is not None:
+                self.players.insert(0, p)
+            if self.mano >= len(self.players):
+                self.mano = 0
+
+        self.turn = self.mano
+        return
 
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % len(self.players)
         while(i != self.mano):
             rival = self.players[i]
+            print(winner.name+' vs '+rival.name)
             if self.defeat(winner.getPares(), rival.getPares()):
                 winner = rival
-                i = (self.mano + 1) % len(self.players)
+            print('Winner: '+winner.name)
+            i = (i + 1) % len(self.players)
         return winner
 
     def defeat(self, winner, rival):
@@ -434,38 +462,42 @@ class Pares(Phase):
 
 
 class Juego(Phase):
-    def __init__(self, players, mano):
-        super().__init__(players, mano)
-        self.players = players.copy()
-        for p in self.players:
-            if p.hasJuego() is None:
-                self.players.remove(p)
-        self.mano = self.mano % len(self.players)
 
     def isJuego(self):
         return True
 
-    def noJuego(self):
-        team = None
-        if len(self.players) == 0:
-            return True, True, team
+    def nextTurn(self):
+        self.turn = (self.turn + 1) % len(self.players)
+        return self.getTurn()
 
-        sameTeam = True
-        for p1 in self.players:
-            i = self.players.index(p1)
-            team = p1.team
-            for p2 in self.players[i:]:
-                sameTeam = sameTeam and (p1.team == p2.team)
-        return sameTeam, False, team
+    def noJuego(self):
+        teams = []
+        for p in self.players:
+            teams.append(p.team)
+        return teams
+
+    def recalculatePlayers(self):
+        for i in range(0, 4):
+            p = self.players.pop()
+            if p.hasJuego():
+                self.players.insert(0, p)
+                self.mano = self.mano + 1
+            if self.mano >= len(self.players):
+                self.mano = 0
+
+        self.turn = self.mano
+        return
 
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % len(self.players)
         while(i != self.mano):
             rival = self.players[i]
+            print(winner.name+' vs '+rival.name)
             if self.defeat(winner.getJuego(), rival.getJuego()):
                 winner = rival
-                i = (self.mano + 1) % len(self.players)
+            print('Winner: '+winner.name)
+            i = (i + 1) % len(self.players)
         return winner
 
     def defeat(self, winner, rival):
@@ -490,34 +522,34 @@ class Juego(Phase):
         return "juego"
 
 
-class Punto(Phase):
-
-    def isPunto(self):
-        return True
-
-    def getWinner(self):
-        winner = self.players[self.mano]
-        i = (self.mano + 1) % len(self.players)
-        while(i != self.mano):
-            rival = self.players[i]
-            if self.defeat(winner.getJuego(), rival.getJuego()):
-                winner = rival
-                i = (self.mano + 1) % len(self.players)
-        return winner
-
-    def defeat(self, winner, rival):
-        if rival > winner:
-            return True
-        return False
-
-    def getResults(self):
-        if self.winner is None:
-            self.winner = self.getWinner()
-        self.points = self.points + 1
-        return self.winner, self.points
-
-    def getName(self):
-        return "punto"
+# class Punto(Phase):
+#
+#     def isPunto(self):
+#         return True
+#
+#     def getWinner(self):
+#         winner = self.players[self.mano]
+#         i = (self.mano + 1) % len(self.players)
+#         while(i != self.mano):
+#             rival = self.players[i]
+#             if self.defeat(winner.getJuego(), rival.getJuego()):
+#                 winner = rival
+#             i = (i + 1) % len(self.players)
+#         return winner
+#
+#     def defeat(self, winner, rival):
+#         if rival > winner:
+#             return True
+#         return False
+#
+#     def getResults(self):
+#         if self.winner is None:
+#             self.winner = self.getWinner()
+#         self.points = self.points + 1
+#         return self.winner, self.points
+#
+#     def getName(self):
+#         return "punto"
 
 
 # A game round
@@ -541,7 +573,8 @@ class Round:
         self.phases = ['juego', 'pares', 'chica', 'grande']
         self.phase = Mus(self.players, self.deck)
 
-        self.results = []
+        self.winners = []
+        self.points = []
 
     # Gets the phase which the game is in
     def getPhase(self):
@@ -550,15 +583,19 @@ class Round:
     # Selects the next phase to play
     def nextPhase(self):
         if not self.phase.isMus():
-            self.results.append(self.phase.getResults())
+            results = self.phase.getResults()
+            self.winners.append(results[0])
+            self.points.append(results[1])
 
         if len(self.phases) > 0:
             name = self.phases.pop()
 
             if name == 'juego':
-                self.phase = Juego(self.players, self.mano)
+                self.phase = Juego(self.players.copy(), self.mano)
+                self.phase.recalculatePlayers()
             if name == 'pares':
-                self.phase = Pares(self.players, self.mano)
+                self.phase = Pares(self.players.copy(), self.mano)
+                self.phase.recalculatePlayers()
             if name == 'chica':
                 self.phase = Chica(self.players, self.mano)
             if name == 'grande':
@@ -567,9 +604,9 @@ class Round:
             return self.phase
         return None
 
-    def thereIsPunto(self):
-        self.phases.append(Punto(self.players, self.mano))
-        return
+    # def thereIsPunto(self):
+    #     self.phases.append(Punto(self.players, self.mano))
+    #     return
 
 
 # Room class: its id is randomly generated
@@ -658,6 +695,8 @@ class Room:
 
     # Creates a new round
     def newRound(self):
+        for p in self.players:
+            p.cards.clear()
         self.mano = (self.mano + 1) % 4
         self.round = Round(self.players, self.mano)
         return self.round

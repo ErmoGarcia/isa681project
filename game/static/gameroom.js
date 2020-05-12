@@ -101,11 +101,16 @@ $(document).ready(function() {
 
 
   $('#mus').click(function(){
-      $('#mus').hide();
-      $('#noMus').hide();
-      arrayMus = Array.from(cardsSet);
-      jsonToSend = {cutMus: false, discards: arrayMus};
-      socket.emit('client_mus_turn', jsonToSend);
+      if(card1OnClick==false && card2OnClick==false && card3OnClick==false && card4OnClick==false){
+        alert ('You have to select a card at least');
+      }
+      else{
+        $('#mus').hide();
+        $('#noMus').hide();
+        arrayMus = Array.from(cardsSet);
+        jsonToSend = {cutMus: false, discards: arrayMus};
+        socket.emit('client_mus_turn', jsonToSend);
+      }
   });
 
   $('#noMus').click(function(){
@@ -117,29 +122,30 @@ $(document).ready(function() {
 
   $('#pass').click(function(){
       jsonToSend = {bid: 0, see: false};
-      socket.emit(jsonToSend);
+      socket.emit('client_game_turn',jsonToSend);
   });
 
   $('#acceptBid').click(function(){
       jsonToSend = {bid: 0, see: true};
-      socket.emit(jsonToSend);
+      socket.emit('client_game_turn',jsonToSend);
   });
 
   $('#envido').click(function(){
       jsonToSend = {bid: 2, see: false};
-      socket.emit(jsonToSend);
+      socket.emit('client_game_turn',jsonToSend);
   });
 
   $('#submit').click(function(){
       var myBid = $('#bid').val();
       jsonToSend = {bid: myBid, see: false};
-      socket.emit(jsonToSend);
+      socket.emit('client_game_turn',jsonToSend);
   });
 
     socket.on('start_game', function(data){
       $('#blueTeam').text('Blue Team Points: ' + data.scoreBlue);
       $('#redTeam').text('Red Team Points: ' + data.scoreRed);
       var i = data.player_number;
+      console.log(i);
       $('#player1').append(data.players[i]);
       if(i==3){
         $('#player1').css('color', 'red');
@@ -166,7 +172,7 @@ $(document).ready(function() {
         $('#player2').css('color', 'blue');
         $('#player3').text(data.players[3]);
         $('#player3').css('color', 'red');
-        $('#player4').text(data.players[1]);
+        $('#player4').text(data.players[0]);
         $('#player4').css('color', 'blue');
       }
       else {
@@ -183,11 +189,10 @@ $(document).ready(function() {
     });
 
   socket.on('message', function(data){
-      $('#messages').append(data);
+      $('#messages').append('<br>'+data);
   });
 
   socket.on('mus_turn', function(data){
-      console.log(data.cards)
       card1OnClick = false;
       card2OnClick = false;
       card3OnClick = false;
@@ -196,6 +201,7 @@ $(document).ready(function() {
         // $('#noMus').css('visibility', 'visible');
       $('#mus').show()
       $('#noMus').show()
+      $('#phase').text("Phase: Mus");
       data.cards.forEach(function(value,index){
         var number=value[0];
         var palo;
@@ -257,27 +263,37 @@ $(document).ready(function() {
       $('#currentBlueBid').text(data.blueBid);
       $('#currentRedBid').text(data.redBid);
 
-      console.log(data.turn)
-      if ($('#player1').text().localeCompare(data.turn) == 0){
-          $('#pass').css('visibility', 'hidden');
-          $('#acceptBid').css('visibility', 'hidden');
+
+      if ($('#player1').text().trim().localeCompare(data.turn) == 0){
+          $('#pass').css('visibility', 'visible');
+          $('#acceptBid').css('visibility', 'visible');
           $('#envido').css('visibility', 'visible');
           $('#myForm').css('visibility', 'visible');
       }
   });
 
   socket.on('show_down', function(data){
+      $('#phase').text("Phase: Show Down");
+      $('#pass').css('visibility', 'hidden');
+      $('#acceptBid').css('visibility', 'hidden');
+      $('#envido').css('visibility', 'hidden');
+      $('#myForm').css('visibility', 'hidden');
+      $('#mus').hide();
+      $('#noMus').hide();
       $('#messages').text('');
-      $('#messages').append("<br><p style='font-weight:bold;'>Grandes Winner: "+data.grande[0]+"</p><br><br>");
-      $('#messages').append("<p style='font-weight:bold;'>Chicas Winner: "+data.chica[0]+"</p><br><br>");
-      $('#messages').append("<p style='font-weight:bold;'>Pares Winner: "+data.pares[0]+"</p><br><br>");
-      $('#messages').append("<p style='font-weight:bold;'>Juego Winner: "+data.juego[0]+"</p><br><br>");
-      if(data.punto[0]==null){
-        $('#messages').append("<p style='font-weight:bold;'>Punto Winner: No Punto Played</p><br><br>");
-      }
-      else {
-        $('#messages').append("<p style='font-weight:bold;'>Punto Winner: "+data.punto[0]+"</p><br><br>");
-      }
+      $('#messages').append("<br><p style='font-weight:bold;'>Grandes Winner: "+data.grande[0]+"</p><br>");
+      $('#messages').append("<p style='font-weight:bold;'>Points: "+data.grande[1]+"</p><br><br>");
+      $('#messages').append("<p style='font-weight:bold;'>Chicas Winner: "+data.chica[0]+"</p><br>");
+      $('#messages').append("<p style='font-weight:bold;'>Points: "+data.chica[1]+"</p><br><br>");
+      $('#messages').append("<p style='font-weight:bold;'>Pares Winner: "+data.pares[0]+"</p><br>");
+      $('#messages').append("<p style='font-weight:bold;'>Points: "+data.pares[1]+"</p><br><br>");
+      $('#messages').append("<p style='font-weight:bold;'>Juego Winner: "+data.juego[0]+"</p><br>");
+      $('#messages').append("<p style='font-weight:bold;'>Points: "+data.juego[1]+"</p><br><br>");
+      $('#messages').append("<p style='font-weight:bold;'>Next Round Starts in 60 seconds</p><br>");
+
+
+      $('#currentBlueBid').text('0');
+      $('#currentRedBid').text('0');
 
       var player2 = $('#player2').text();
       var player3 = $('#player3').text();
@@ -286,6 +302,8 @@ $(document).ready(function() {
       var player2Cards = data.playerCards[player2];
       var player3Cards = data.playerCards[player3];
       var player4Cards = data.playerCards[player4];
+
+      console.log('las cartas del jugador 2 ' + player2Cards);
 
       player2Cards.forEach(function(value,index){
         var number=value[0];
@@ -404,6 +422,32 @@ $(document).ready(function() {
         }
       });
   })
+
+  socket.on('start_round', function(data){
+      $('#blueTeam').text('Blue Team Points: ' + data.scoreBlue);
+      $('#redTeam').text('Red Team Points: ' + data.scoreRed);
+      $('#messages').text('');
+      $('#messages').append('<p>Next Round Started</p>');
+      $('#mus').show()
+      $('#noMus').show()
+      $('#phase').text("Phase: Mus");
+      $('#playerTurn').text("");
+      $('#card5').attr('src', '/static/cards/Reverse.jpg');
+      $('#card6').attr('src', '/static/cards/Reverse.jpg');
+      $('#card7').attr('src', '/static/cards/Reverse.jpg');
+      $('#card8').attr('src', '/static/cards/Reverse.jpg');
+      $('#card9').attr('src', '/static/cards/Reverse.jpg');
+      $('#card10').attr('src', '/static/cards/Reverse.jpg');
+      $('#card11').attr('src', '/static/cards/Reverse.jpg');
+      $('#card12').attr('src', '/static/cards/Reverse.jpg');
+      $('#card13').attr('src', '/static/cards/Reverse.jpg');
+      $('#card14').attr('src', '/static/cards/Reverse.jpg');
+      $('#card15').attr('src', '/static/cards/Reverse.jpg');
+      $('#card16').attr('src', '/static/cards/Reverse.jpg');
+
+      $('#currentBlueBid').text('0');
+      $('#currentRedBid').text('0');
+  });
 
 
   socket.on('new_connection', function(data){
