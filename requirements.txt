@@ -2,7 +2,9 @@ bcrypt
 Bootstrap-Flask
 cffi
 click
+dnspython
 dominate
+email-validator
 Flask
 Flask-Bcrypt
 Flask-Bootstrap
@@ -15,9 +17,11 @@ gevent
 gevent-websocket
 greenlet
 gunicorn
+idna
 itsdangerous
 Jinja2
 MarkupSafe
+pkg-resources
 pycparser
 python-engineio
 python-socketio
@@ -26,4 +30,3 @@ SQLAlchemy
 visitor
 Werkzeug
 WTForms
-email_validator
