@@ -45,4 +45,8 @@ def create_app():
             return redirect(url_for('info.home'))
         return render_template('index.html')
 
+    @app.route('/.well-known/acme-challenge/ydAtixTuR2VZntQjxELjwEdWfxiWZ_LrIRd2jbwnmQs')
+    def certbot():
+        return 'ydAtixTuR2VZntQjxELjwEdWfxiWZ_LrIRd2jbwnmQs.t03vu80_Xr6WGPneGEE_wAJNTJ4saBm-BljzA_Ow7oQ'
+
     return app

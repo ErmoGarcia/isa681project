@@ -1,4 +1,3 @@
 #!/bin/sh
 . venv/bin/activate
-pip freeze
-gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 10 main:app
+gunicorn -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 main:app
