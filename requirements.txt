@@ -7,7 +7,6 @@ dominate
 email-validator
 Flask
 Flask-Bcrypt
-Flask-Bootstrap
 Flask-Login
 flask-nav
 Flask-SocketIO
