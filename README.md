@@ -26,13 +26,23 @@ Project for ISA681 course
 
 ### 6.3 Dynamic tool
 
++ OWASP ZAP
+
 ### 6.4 Static tool
+
++ PMD
++ FindBugs
++ Fortify
 
 ### 6.5 Source of randomness
 
 ### 6.6 Libraries/Dependencies
 
 ### 6.7 Authentication Process
+
++ Input validation
++ Session encryption
++ Password hashing
 
 
 

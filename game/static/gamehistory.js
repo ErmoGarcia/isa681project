@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    var socket = io('/history');
+    var socket = io('/history', {transport: ['websocket']});
 
   //Visilibility Environment
   $('#next').css('visibility', 'visible');

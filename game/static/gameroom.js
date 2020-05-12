@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  var socket = io('/game');
+  var socket = io('/game', {transport: ['websocket']});
   var card1 = [];
   var card2 = [];
   var card3 = [];
