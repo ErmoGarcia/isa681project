@@ -1,5 +1,5 @@
 $(document).ready(function() {
-  var socket = io();
+  var socket = io('/game');
   var card1 = [];
   var card2 = [];
   var card3 = [];

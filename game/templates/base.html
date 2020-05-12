@@ -33,6 +33,7 @@
           {% if current_user.is_authenticated %}
             {{ render_nav_item('index', '{}'.format(current_user.username), use_li=True) }}
             {{ render_nav_item('info.history', 'History', use_li=True) }}
+            {{ render_nav_item('info.stats', 'Statistics', use_li=True) }}
             {{ render_nav_item('auth.logout', 'Logout', use_li=True) }}
           {% else %}
             {{ render_nav_item('index', 'Home', use_li=True) }}
@@ -47,6 +48,16 @@
     <div class="menu" style="margin-left: 50px; margin-top: 230px; float:left; width:18%">
       <table>
         <tbody>
+          <tr>
+              <td class="text-center">
+                 <button id='next' type='submit' style='visibility: hidden;'>Next move</button><br><br>
+              </td>
+          </tr>
+          <tr>
+              <td class="text-center">
+                 <button id='prev' type='submit' style='visibility: hidden;'>Previous move</button><br><br>
+              </td>
+          </tr>
           <tr>
               <td class="text-center">
                  <button id='mus' type='submit' style='visibility: hidden;'>Mus</button><br><br>

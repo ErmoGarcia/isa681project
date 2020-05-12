@@ -6,7 +6,7 @@ from flask import (
     Blueprint, request, session, redirect, render_template, url_for, flash
 )
 
-from game.models import User, Game, Move, db
+from game.models import User, Game, Move
 from game.play import socketio
 
 from flask_login import current_user
@@ -51,39 +51,76 @@ def history():
 
     # INCOMPLETE
     # Searches for games in the database
-    user = User.query.filter_by(username=current_user.name).first()
-    games = user.games
+    user = User.query.filter_by(username=current_user.username).first()
+    games = []
+    for game in user.games:
+        if game.finished is not None:
+            games.append(game)
     return render_template('info/history.html', games=games)
 
 
 # History function
-@bp.route('/history/<id>')
-def game_history(id):
+@bp.route('/gamehistory/<id>')
+def gamehistory(id):
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
     game = Game.query.filter_by(room_id=id).first()
-    session['game'] = game
-    session['move'] = -1
 
-    return render_template('info/history.html')
+    user = User.query.filter_by(username=current_user.username).first()
+    if user not in game.players:
+        flash('You didn\'t participate in this game.')
+        return redirect(url_for('info.history'))
+
+    session['game'] = id
+    session['move'] = 0
+
+    return render_template('info/gamehistory.html')
 
 
-@socketio.on('next')
-def next(data):
-    game = session['game']
-    session['move'] = session['move'] + 1
+@socketio.on('connect', namespace='/history')
+def connection():
+    if not current_user.is_authenticated:
+        flash('You need to login first.')
+        return redirect(url_for('auth.login'))
+
+    game = Game.query.filter_by(room_id=session['game']).first()
     move = game.moves[session['move']]
     load_move(game, move)
     return
 
 
-@socketio.on('prev')
+@socketio.on('next', namespace='/history')
+def next(data):
+    if not current_user.is_authenticated:
+        flash('You need to login first.')
+        return redirect(url_for('auth.login'))
+
+    game = Game.query.filter_by(room_id=session['game']).first()
+    if session['move'] == len(game.moves) - 1:
+        return
+
+    session['move'] = session['move'] + 1
+    move = game.moves[session['move']]
+
+    load_move(game, move)
+    return
+
+
+@socketio.on('prev', namespace='/history')
 def prev(data):
-    game = session['game']
+    if not current_user.is_authenticated:
+        flash('You need to login first.')
+        return redirect(url_for('auth.login'))
+
+    game = Game.query.filter_by(room_id=session['game']).first()
+    if session['move'] == 0:
+        return
+
     session['move'] = session['move'] - 1
     move = game.moves[session['move']]
+
     load_move(game, move)
     return
 
@@ -98,15 +135,16 @@ def load_move(game, move):
     for p in game.players:
         players.append(p.username)
 
-    cards = list(move.getPlayer1Cards(), move.getPlayer2Cards(),
-                 move.getPlayer3Cards(), move.getPlayer4Cards())
+    cards = [move.getPlayer1Cards(), move.getPlayer2Cards(),
+             move.getPlayer3Cards(), move.getPlayer4Cards()]
 
     data = {
-        players: players,
-        phase: phase,
-        message: message,
-        scoreBlue: scoreBlue,
-        scoreRed: scoreRed,
-        cards: cards
+        "players": players,
+        "phase": phase,
+        "message": message,
+        "scoreBlue": scoreBlue,
+        "scoreRed": scoreRed,
+        "cards": cards
     }
-    emit("move", data, request.sid)
+    emit("move", data, namespace='/history', room=request.sid)
+    return

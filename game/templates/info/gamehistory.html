@@ -3,8 +3,7 @@
 {% block header %}
 <h1></h1>
 {% endblock %}
-
-{% block title %}Game Room{% endblock %}
+{% block title %}Game History{% endblock %}
 
 
 
@@ -36,24 +35,24 @@
 							<tr>
 								<td class="text-center"><img  id='card13' style="width:100%; transform: rotate(270deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
 								<td class="text-center"></td>
-								<td class="text-center" style='color:black; text-align: center; vertical-align: bottom;'>Turn: </td>
-								<td class="text-center" id='playerTurn' style='color:blue; text-align: center; vertical-align: bottom; font-weight: bold;'></td>
+								<td class="text-center"></td>
+								<td class="text-center"></td>
 								<td class="text-center"></td>
 								<td class="text-center"><img id='card8' style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
 							</tr>
 							<tr>
 								<td class="text-center"><img  id='card14' style="width:100%; transform: rotate(270deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
 								<td class="text-center"></td>
-								<td class="text-center" style='color:blue; text-align: center; vertical-align: bottom;'>Blue</td>
-								<td class="text-center" style='color:red; text-align: center; vertical-align: bottom;'>Red</td>
+								<td class="text-center"></td>
+								<td class="text-center"></td>
 								<td class="text-center"></td>
 								<td class="text-center"><img  id='card7' style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
 							</tr>
 							<tr>
 								<td class="text-center"><img  id='card15' style="width:100%; transform: rotate(270deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
 								<td class="text-center"></td>
-								<td class="text-center" id='currentBlueBid' style='color:blue; text-align: center;'>0</td>
-								<td class="text-center" id='currentRedBid' style='color:red; text-align: center;'>0</td>
+								<td class="text-center"></td>
+								<td class="text-center"></td>
 								<td class="text-center"></td>
 								<td class="text-center"><img  id='card6' style="width:100%; transform: rotate(90deg);" class="img-responsive" src="{{ url_for('static', filename='cards/Reverse.jpg') }}"></td>
 							</tr>
@@ -91,5 +90,5 @@
 {% block scripts %}
 {{ super() }}
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.min.js"></script>
-<script src="{{ url_for('static', filename='gameroom.js') }}"></script>
+<script src="{{ url_for('static', filename='gamehistory.js') }}"></script>
 {% endblock %}

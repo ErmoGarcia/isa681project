@@ -12,8 +12,8 @@
   <li class="list-group-item">Total number of losses: {{ stats.get(current_user.username)[1] }}</li>
   <li class="list-group-item">Wins percentage: {{ stats.get(current_user.username)[2] }}</li>
 </ul>
-{{ stats.pop(current_user.username) }}
-<br>
+<p style="display: none;">{{ stats.pop(current_user.username) }}<p>
+</br>
 <h3>Every other user stats:</h3>
 {% for user in stats %}
 <ul class="list-group">

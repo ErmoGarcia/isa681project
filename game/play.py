@@ -98,7 +98,7 @@ def gameroom(id):
 
 
 # Socket connection event
-@socketio.on('connect')
+@socketio.on('connect', namespace='/game')
 def new_connection():
     if not current_user.is_authenticated:
         return False
@@ -127,13 +127,14 @@ def new_connection():
         return True
 
     # Sends event 'user has connected' to everyone in the room
-    send("User {} has connected.".format(player.name), room=room)
+    send("User {} has connected.".format(player.name),
+         namespace='/game', room=room)
 
     if room.isFull():
         start(room)
 
 
-@socketio.on('disconnect')
+@socketio.on('disconnect', namespace='/game')
 def new_disconnection():
 
     # Gets the room where the client was at form the session
@@ -156,7 +157,7 @@ def new_disconnection():
         if player not in room.connected:
             print('game over')
             send("User {} was afk for too long.".format(player.name),
-                 room=room)
+                 namespace='/game', room=room)
             if player.team == "blue":
                 room.scoreRed = 100
             if player.team == "red":
@@ -165,13 +166,14 @@ def new_disconnection():
             return
 
     room.players.remove(player)
-    send("User {} has disconnected.".format(player.name), room=room)
+    send("User {} has disconnected.".format(player.name),
+         namespace='/game', room=room)
     if len(room.players) == 0:
         rooms.pop(session['room'])
     return
 
 
-@socketio.on('client_mus_turn')
+@socketio.on('client_mus_turn', namespace='/game')
 def client_mus_turn(data):
     if not current_user.is_authenticated:
         return False
@@ -202,12 +204,12 @@ def client_mus_turn(data):
     if bool(data['cutMus']):
         msg = "{} cuts mus.".format(player.name)
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         mus_turn(room, True)
         return True
     msg = "{} calls mus.".format(player.name)
     move_db(room, msg)
-    send(msg, room=room)
+    send(msg, namespace='/game', room=room)
 
     if data['discards'] is not None:
         for discard in data['discards']:
@@ -218,14 +220,14 @@ def client_mus_turn(data):
         if phase.allDiscarded():
             msg = "Everybody called mus."
             move_db(room, msg)
-            send(msg, room=room)
+            send(msg, namespace='/game', room=room)
             phase.discardAll()
             mus_turn(room, False)
 
     return True
 
 
-@socketio.on('client_game_turn')
+@socketio.on('client_game_turn', namespace='/game')
 def client_game_turn(data):
     if not current_user.is_authenticated:
         return False
@@ -272,7 +274,7 @@ def client_game_turn(data):
 
         msg = "{} sees the bet.".format(player.name)
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         phase.see()
         new_phase(room)
         if room.round.getPhase().isMus():
@@ -283,7 +285,7 @@ def client_game_turn(data):
         print('Last envite: '+str(envite.value)+', '+envite.color)
         msg = "{} doesn't see the bet.".format(player.name)
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         turn = phase.nextTurn()
 
         while(turn.team == envite.color):
@@ -298,7 +300,7 @@ def client_game_turn(data):
 
     msg = "{} passes.".format(player.name)
     move_db(room, msg)
-    send(msg, room=room)
+    send(msg, namespace='/game', room=room)
 
     turn = phase.nextTurn()
     if phase.allPassed():
@@ -323,7 +325,7 @@ def start(room):
             "players": room.getPlayers(),
             "player_number": room.players.index(p)
         }
-        emit('start_game', data, room=p.sid)
+        emit('start_game', data, namespace='/game', room=p.sid)
     new_round(room)
     return
 
@@ -338,8 +340,8 @@ def new_round(room):
         "scoreBlue": room.scoreBlue,
         "scoreRed": room.scoreRed,
     }
-    emit('start_round', data, room=room)
-    send(msg, room=room)
+    emit('start_round', data, namespace='/game', room=room)
+    send(msg, namespace='/game', room=room)
 
     mus_turn(room, False)
     return
@@ -372,18 +374,18 @@ def new_phase(room):
 
     msg = "New phase {}.".format(phase.getName())
     move_db(room, msg)
-    send(msg, room=room)
+    send(msg, namespace='/game', room=room)
 
     if phase.isPares():
         for p in phase.players:
             if p.hasPares() is not None:
                 msg = "{0} has pares.".format(p.name)
                 move_db(room, msg)
-                send(msg, room=room)
+                send(msg, namespace='/game', room=room)
             else:
                 msg = "{0} doesn't have pares.".format(p.name)
                 move_db(room, msg)
-                send(msg, room=room)
+                send(msg, namespace='/game', room=room)
         if not thereIsPares(room):
             new_phase(room)
             return
@@ -393,11 +395,11 @@ def new_phase(room):
             if p.hasJuego():
                 msg = "{0} has juego.".format(p.name)
                 move_db(room, msg)
-                send(msg, room=room)
+                send(msg, namespace='/game', room=room)
             else:
                 msg = "{0} doesn't have juego.".format(p.name)
                 move_db(room, msg)
-                send(msg, room=room)
+                send(msg, namespace='/game', room=room)
         if not thereIsJuego(room):
             new_phase(room)
             return
@@ -430,7 +432,7 @@ def mus_turn(room, cutMus=False):
             "cutMus": False,
             "cards": cards
         }
-        emit('mus_turn', data_mus, room=p.sid)
+        emit('mus_turn', data_mus, namespace='/game', room=p.sid)
 
     return
 
@@ -453,8 +455,8 @@ def game_turn(room):
 
     msg = "{} speaks.".format(turn.name)
     move_db(room, msg)
-    send(msg, room=room)
-    emit('game_turn', data, room=room)
+    send(msg, namespace='/game', room=room)
+    emit('game_turn', data, namespace='/game', room=room)
     return
 
 
@@ -467,7 +469,7 @@ def new_envite(room, player, envite, bid):
 
     msg = "{player} bets {value}.".format(player=player.name, value=bid)
     move_db(room, msg)
-    send(msg, room=room)
+    send(msg, namespace='/game', room=room)
     phase.envidar(player, bid)
 
     while(turn.team == phase.lastBid.color):
@@ -494,11 +496,27 @@ def show_down(room):
 
     if winners[0] is not None:
         grande = (winners[0].name, points[0])
+        msg = "{0} ({1} team) wins {2} points for grande.".format(
+            winners[0].name, winners[0].team, points[0]
+        )
+        move_db(room, msg)
     if winners[1] is not None:
         chica = (winners[1].name, points[1])
+        msg = "{0} ({1} team) wins {2} points for chica.".format(
+            winners[1].name, winners[1].team, points[1]
+        )
+        move_db(room, msg)
     if winners[2] is not None:
+        msg = "{0} ({1} team) wins {2} points for pares.".format(
+            winners[2].name, winners[2].team, points[2]
+        )
+        move_db(room, msg)
         pares = (winners[2].name, points[2])
     if winners[3] is not None:
+        msg = "{0} ({1} team) wins {2} points for grande.".format(
+            winners[3].name, winners[3].team, points[3]
+        )
+        move_db(room, msg)
         juego = (winners[3].name, points[3])
     # if len(winners) > 4:
     #     punto = (winners[4].name, points[1])
@@ -514,7 +532,7 @@ def show_down(room):
         # "punto": punto
     }
 
-    emit('show_down', data, room=room)
+    emit('show_down', data, namespace='/game', room=room)
     return
 
 
@@ -522,21 +540,21 @@ def finish(room):
     if room.scoreBlue > room.scoreRed:
         msg = "Game ended: blue team won."
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
 
         for p in room.players:
             user = User.query.filter_by(username=p.name).first()
             if p.team == "blue":
-                # emit('finish', {"message": "You won!"}, room=p.sid)
+                # emit('finish', {"message": "You won!"}, namespace='/game', room=p.sid)
                 user.wins = user.wins + 1
             elif p.team == "red":
-                # emit('finish', {"message": "You lost :("}, room=p.sid)
+                # emit('finish', {"message": "You lost :("}, namespace='/game', room=p.sid)
                 user.losses = user.losses + 1
 
     if room.scoreRed > room.scoreBlue:
         msg = "Game ended: red team won."
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
 
         for p in room.players:
             user = User.query.filter_by(username=p.name).first()
@@ -544,7 +562,7 @@ def finish(room):
                 # emit('finish', {"message": "You won!"}, room=p.sid)
                 user.wins = user.wins + 1
             elif p.team == "blue":
-                # emit('finish', {"message": "You lost :("}, room=p.sid)
+                # emit('finish', {"message": "You lost :("}, namespace='/game', room=p.sid)
                 user.losses = user.losses + 1
 
     room.finished = datetime.utcnow()
@@ -568,21 +586,21 @@ def thereIsPares(room):
     if len(teams) == 0:
         msg = "Nobody has pares."
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         time.sleep(3)
         return False
 
     if "blue" not in teams:
         msg = "Only red team has pares."
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         time.sleep(3)
         return False
 
     if "red" not in teams:
         msg = "Only blue team has pares."
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         time.sleep(3)
         return False
 
@@ -599,21 +617,21 @@ def thereIsJuego(room):
     if len(teams) == 0:
         msg = "Nobody has juego."
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         time.sleep(3)
         return False
 
     if "blue" not in teams:
         msg = "Only red team has juego."
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         time.sleep(3)
         return False
 
     if "red" not in teams:
         msg = "Only blue team has juego."
         move_db(room, msg)
-        send(msg, room=room)
+        send(msg, namespace='/game', room=room)
         time.sleep(3)
         return False
 
@@ -627,13 +645,13 @@ def reconnect(room, player):
         "players": room.getPlayers(),
         "player_number": room.players.index(player)
     }
-    emit('start_game', data, room=player.sid)
+    emit('start_game', data, namespace='/game', room=player.sid)
 
     data = {
         "scoreBlue": room.scoreBlue,
         "scoreRed": room.scoreRed,
     }
-    emit('start_round', data, room=player.sid)
+    emit('start_round', data, namespace='/game', room=player.sid)
 
     cards = []
     for c in player.cards:
@@ -643,7 +661,7 @@ def reconnect(room, player):
         "cutMus": False,
         "cards": cards
     }
-    emit('mus_turn', data_mus, room=player.sid)
+    emit('mus_turn', data_mus, namespace='/game', room=player.sid)
 
     phase = room.round.getPhase()
     if not phase.isMus():
@@ -660,7 +678,7 @@ def reconnect(room, player):
             "turn": turn.name
         }
 
-        emit('game_turn', data, room=player.sid)
+        emit('game_turn', data, namespace='/game', room=player.sid)
     return
 
 

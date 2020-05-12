@@ -98,16 +98,16 @@ class Move(db.Model):
     game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
 
     def getPlayer1Cards(self):
-        return list(self.card11, self.card12, self.card13, self.card14)
+        return [self.card11, self.card12, self.card13, self.card14]
 
     def getPlayer2Cards(self):
-        return list(self.card21, self.card22, self.card23, self.card24)
+        return [self.card21, self.card22, self.card23, self.card24]
 
     def getPlayer3Cards(self):
-        return list(self.card31, self.card32, self.card33, self.card34)
+        return [self.card31, self.card32, self.card33, self.card34]
 
     def getPlayer4Cards(self):
-        return list(self.card41, self.card42, self.card43, self.card44)
+        return [self.card41, self.card42, self.card43, self.card44]
 
     def __repr__(self):
         return '<Move %r>' % self.id
