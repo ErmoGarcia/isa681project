@@ -21,7 +21,6 @@ idna
 itsdangerous
 Jinja2
 MarkupSafe
-pkg-resources
 pycparser
 python-engineio
 python-socketio
