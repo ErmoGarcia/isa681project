@@ -2,7 +2,43 @@
 
 Project for ISA681 course
 
-## INITIAL SET UP:
+## 1. Introduction
+
++ brief description
++ project name, collaborators, class, date...
+
+## 2. Design/Arhitecture
+
++ major components
++ major function/classes
+
+## 3. Installation Instructions
+
+## 4. Operating Instructions
+
+## 5. Game Rules
+
+## 6. Why you believe is secure
+
+### 6.1 Server
+
+### 6.2 Input validation
+
+### 6.3 Dynamic tool
+
+### 6.4 Static tool
+
+### 6.5 Source of randomness
+
+### 6.6 Libraries/Dependencies
+
+### 6.7 Authentication Process
+
+
+
+## References
+
+#### INITIAL SET UP:
 
 1 - Enabling SSH: https://linuxize.com/post/how-to-enable-ssh-on-ubuntu-18-04/
 
@@ -29,7 +65,7 @@ Project for ISA681 course
 12 - Create the Hello World: https://flask.palletsprojects.com/en/1.1.x/quickstart/#quickstart
 
 
-## SSL/TLS:
+#### SSL/TLS:
 
 1 - Install certbot and get certificates: https://certbot.eff.org/lets-encrypt/ubuntubionic-other
 
@@ -45,7 +81,7 @@ Project for ISA681 course
 
 
 
-## APACHE:
+#### APACHE:
 
 1 - Install and configure mod_wsgi: https://modwsgi.readthedocs.io/en/master/user-guides/quick-installation-guide.html
 
@@ -61,7 +97,7 @@ https://modwsgi.readthedocs.io/en/master/user-guides/quick-configuration-guide.h
 
 
 
-## GIT:
+#### GIT:
 
 1- Docs: https://git-scm.com/book/en/v2/Git-Basics-Getting-a-Git-Repository
 
@@ -71,7 +107,7 @@ https://modwsgi.readthedocs.io/en/master/user-guides/quick-configuration-guide.h
 
 
 
-## FLASK:
+#### FLASK:
 
 1 - Tutorial: https://flask.palletsprojects.com/en/1.1.x/tutorial/
 
@@ -95,7 +131,7 @@ https://modwsgi.readthedocs.io/en/master/user-guides/quick-configuration-guide.h
 
 
 
-## Extras:
+#### Extras:
 
 1 - Recaptcha: https://john.soban.ski/add-recaptcha-to-your-flask-application.html
 

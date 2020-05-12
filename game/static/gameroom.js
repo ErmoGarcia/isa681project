@@ -447,6 +447,8 @@ $(document).ready(function() {
 
       $('#currentBlueBid').text('0');
       $('#currentRedBid').text('0');
+
+      afterMus = false;
   });
 
 
