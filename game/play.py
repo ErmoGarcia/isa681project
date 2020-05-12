@@ -545,10 +545,10 @@ def finish(room):
         for p in room.players:
             user = User.query.filter_by(username=p.name).first()
             if p.team == "blue":
-                # emit('finish', {"message": "You won!"}, namespace='/game', room=p.sid)
+                emit('finish', {"message": "You won!"}, namespace='/game', room=p.sid)
                 user.wins = user.wins + 1
             elif p.team == "red":
-                # emit('finish', {"message": "You lost :("}, namespace='/game', room=p.sid)
+                emit('finish', {"message": "You lost :("}, namespace='/game', room=p.sid)
                 user.losses = user.losses + 1
 
     if room.scoreRed > room.scoreBlue:
@@ -559,10 +559,10 @@ def finish(room):
         for p in room.players:
             user = User.query.filter_by(username=p.name).first()
             if p.team == "red":
-                # emit('finish', {"message": "You won!"}, room=p.sid)
+                emit('finish', {"message": "You won!"}, room=p.sid)
                 user.wins = user.wins + 1
             elif p.team == "blue":
-                # emit('finish', {"message": "You lost :("}, namespace='/game', room=p.sid)
+                emit('finish', {"message": "You lost :("}, namespace='/game', room=p.sid)
                 user.losses = user.losses + 1
 
     room.finished = datetime.utcnow()

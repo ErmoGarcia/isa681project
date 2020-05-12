@@ -472,4 +472,8 @@ $(document).ready(function() {
 
   });
 
+  socket.on('finish', function(data){
+      alert(data.message);
+  });
+
 });

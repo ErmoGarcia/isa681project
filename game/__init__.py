@@ -1,7 +1,5 @@
-import os
-
 from flask import (
-    Flask, render_template, flash, redirect, url_for
+    Flask, render_template, redirect, url_for
 )
 
 from flask_login import current_user
@@ -44,9 +42,5 @@ def create_app():
         if current_user.is_authenticated:
             return redirect(url_for('info.home'))
         return render_template('index.html')
-
-    @app.route('/.well-known/acme-challenge/ydAtixTuR2VZntQjxELjwEdWfxiWZ_LrIRd2jbwnmQs')
-    def certbot():
-        return 'ydAtixTuR2VZntQjxELjwEdWfxiWZ_LrIRd2jbwnmQs.t03vu80_Xr6WGPneGEE_wAJNTJ4saBm-BljzA_Ow7oQ'
 
     return app
