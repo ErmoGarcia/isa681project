@@ -38,7 +38,10 @@ def stats():
     for user in users:
         wins = float(user.wins)
         losses = float(user.losses)
-        percentage = 100*wins/(wins+losses)
+        if wins+losses != 0:
+            percentage = 100*wins/(wins+losses)
+        else:
+            percentage = 0
         stats[user.username] = (wins, losses, percentage)
 
     return render_template('info/stats.html', stats=stats)
