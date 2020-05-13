@@ -221,20 +221,49 @@ def client_mus_turn(data):
     if not phase.isMus():
         return False
 
-    # input validation!!!!
-    # data
+    # Input validation!
+    if not mus_validate(data):
+        return False
 
     # Chacks if the player wants to cut mus
     if bool(data['cutMus']):
         cut_mus(room, player)
         return True
 
-    # Checks that the player selected cards to throw
-    if data['discards'] is None:
-        return False
-
     # Calls mus
     call_mus(room, player, data['discards'])
+    return True
+
+
+# Input validation during Mus phase
+def mus_validate(data):
+    # cutMus must be evaluatable as a boolean
+    try:
+        bool(data['cutMus'])
+    except Exception:
+        return False
+
+    # discards must an iterable with 0 to 4 elements
+    try:
+        iter(data['discards'])
+        if len(data['discards']) > 4 or len(data['discards']) < 0:
+            return False
+
+        # each element consists of an int between 0 and 10
+        # and a string from the set of suits
+        for d in data['discards']:
+            try:
+                if len(d) != 2:
+                    return False
+                if not int(d[0]) in range(1, 11):
+                    return False
+                suits = {"oros", "copas", "espadas", "bastos", "o", "c", "b", "e"}
+                if not str(d[1]) in suits:
+                    return False
+            except Exception:
+                return False
+    except Exception:
+        return False
     return True
 
 
@@ -260,7 +289,7 @@ def call_mus(room, player, discards):
     # The cards that the player selected are added to his discards list
     for discard in discards:
         rank = int(discard[0])
-        suit = discard[1]
+        suit = str(discard[1])
         card = Card(rank, suit)
         player.addDiscard(card)
 
@@ -308,8 +337,9 @@ def client_game_turn(data):
     if player != turn:
         return False
 
-    # input validation!!!!!
-    # data
+    # Input validation!
+    if not validate_turn(data):
+        return False
 
     # Get the last bid that have been made
     envite = phase.lastBid
@@ -329,6 +359,24 @@ def client_game_turn(data):
 
     # When the palyer passes
     player_passes(room, player)
+    return True
+
+
+# Input validation during a phase other than mus
+def validate_turn(data):
+    # bid can be None or an integer between 0 and 40
+    try:
+        if data['bid'] is not None:
+            if int(data['bid']) < 0 or int(data['bid']) > 40:
+                return False
+    except Exception:
+        return False
+
+    # see must be evaluatable as a boolean
+    try:
+        bool(data['see'])
+    except Exception:
+        return False
     return True
 
 

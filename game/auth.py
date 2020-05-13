@@ -2,6 +2,8 @@
 # AUTHENTICATION #
 ##################
 
+import re
+
 from flask import (
     Blueprint, request, redirect, render_template, url_for, flash
 )
@@ -34,13 +36,46 @@ def register():
     if request.method == 'POST':
         if form.validate_on_submit():
 
-            # VALIDATE!!!!!!!
+            # Input that needs to be validated
+            name = request.form['username']
+            passwd = request.form['password']
+            email = request.form['email']
+
+            # Check that the username is a alphanumeric string
+            # between 4 and 25 characters long (whitelist)
+            if not re.search("^[0-9a-zA-Z]{4,25}$", name):
+                flash('Username must contain 4-25 alphanumeric characters.')
+                return redirect(url_for('auth.register'))
+
+            # Check that the password is a alphanumeric string
+            # between 6 and 40 characters long (whitelist)
+            if not re.search("^[0-9a-zA-Z]{6,40}$", passwd):
+                flash('Password must contain 6-40 alphanumeric characters.')
+                return redirect(url_for('auth.register'))
+
+            # Check that the email is a alphanumeric string
+            # between 1 and 50 characters long (whitelist)
+            # this one is less restrictive because email is never used
+            if not re.search("^[0-9a-zA-Z@.]{1,50}$", email):
+                flash('Wrong email.')
+                return redirect(url_for('auth.register'))
+
+            # Check that the username is not registered already
+            exists = db.session.query(User.id).filter_by(username=name).scalar()
+            if exists is not None:
+                flash('Username already in use.')
+                return redirect(url_for('auth.register'))
+
+            # Check that the email is not registered already
+            exists = db.session.query(User.id).filter_by(email=email).scalar()
+            if exists is not None:
+                flash('Email already in use.')
+                return redirect(url_for('auth.register'))
+
             # User is registered in the DB
-            user = User(username=request.form['username'],
-                        password=bcrypt.generate_password_hash(
-                        request.form['password']
-                        ), email=request.form['email'],
-                        wins=0, losses=0)
+            user = User(username=name,
+                        password=bcrypt.generate_password_hash(passwd),
+                        email=email, wins=0, losses=0)
             db.session.add(user)
             db.session.commit()
 
@@ -62,16 +97,31 @@ def login():
     if request.method == 'POST':
         if form.validate_on_submit():
 
-            # VALIDATE!!!!!!!
+            # Input that needs to be validated
+            name = request.form['username']
+            passwd = request.form['password']
+
+            # Check that the username is a alphanumeric string
+            # between 4 and 25 characters long (whitelist)
+            if not re.search("^[0-9a-zA-Z]{4,25}$", name):
+                flash('Invalid credentials. Please try again.')
+                return redirect(url_for('auth.login'))
+
+            # Check that the password is a alphanumeric string
+            # between 6 and 40 characters long (whitelist)
+            if not re.search("^[0-9a-zA-Z]{6,40}$", passwd):
+                flash('Invalid credentials. Please try again.')
+                return redirect(url_for('auth.login'))
+
             # Introduced user is searched in the DB
             user = User.query.filter_by(
-                username=request.form['username']
+                username=name
             ).first()
 
             # Check if username and password are correct
             if user is not None and bcrypt.check_password_hash(
                     user.password,
-                    request.form['password']
+                    passwd
             ):
 
                 # Login user (with login extension)
