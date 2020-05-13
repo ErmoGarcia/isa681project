@@ -1,3 +1,7 @@
+##################################
+# OBJECTS USED DURING A MUS GAME #
+##################################
+
 import secrets
 
 from datetime import datetime
@@ -60,6 +64,7 @@ class Deck:
             n = n-1
         return
 
+    # Reshuffle the discards when there are no cards left in the main deck
     def reshuffle(self):
         while(len(self.discards) > 0):
             card = self.discards.pop()
@@ -112,13 +117,14 @@ class Player:
         self.cards.append(card)
         return
 
+    # Adds one card to the list of discards
     def addDiscard(self, card):
         if len(self.discards) == 4:
             return
         self.discards.append(card)
         return
 
-    # Adds one card to the list of discards
+    # Drops the cards from the list of discards
     def discard(self):
         while(len(self.discards) > 0):
             discard = self.discards.pop()
@@ -127,23 +133,23 @@ class Player:
                     self.cards.remove(card)
         return
 
+    # Gets the values of the cards in decreasing order
     def getGrande(self):
         values = []
         for c in self.cards:
             values.append(c.getValue())
         values.sort()
-        print('Grande de '+self.name+': '+self.name+': '+str(values))
         return values
 
+    # Gets the values of the cards in increasing order
     def getChica(self):
         values = []
         for c in self.cards:
             values.append(c.getValue())
         values.sort(reverse=True)
-        print('Chica de '+self.name+': '+str(values))
         return values
 
-    # Gets a list of the cards of the hand that form pares
+    # Gets a list of the cards of the hand that form pares in increasing order
     def getPares(self):
         pares = []
         for c in self.cards:
@@ -155,18 +161,16 @@ class Player:
                 pares.insert(0, c)
 
         pares.sort()
-        print('Pares de '+self.name+': '+str(pares))
         return pares
 
-    # Gets the hand's Juego
+    # Gets the total juego value of the cards
     def getJuego(self):
         juego = 0
         for c in self.cards:
             juego = juego + c.getJuegoValue()
-        print('Juego de '+self.name+': '+str(juego))
         return juego
 
-    # True if the hand contains pares
+    # The kind of pares the player has
     def hasPares(self):
         pares = len(self.getPares())
         has = None
@@ -178,7 +182,7 @@ class Player:
             has = "duples"
         return has
 
-    # True if the hand has Juego
+    # True if the player has juego (>30)
     def hasJuego(self):
         juego = self.getJuego()
         return juego >= 31
@@ -194,7 +198,7 @@ class Player:
             return 3
         return 0
 
-    # The amount of points from Juego in the hand
+    # The amount of points from juego in the hand
     def pointsJuego(self):
         juego = self.getJuego()
         if juego == 31:
@@ -204,6 +208,7 @@ class Player:
         return 0
 
 
+# An envite is how a bet is called in mus
 class Envite:
     def __init__(self, player):
         self.player = player
@@ -211,6 +216,7 @@ class Envite:
         self.value = 2
 
 
+# Class for the mus phase
 class Mus():
     def __init__(self, players, deck):
         self.players = players
@@ -219,6 +225,7 @@ class Mus():
     def isMus(self):
         return True
 
+    # Check wheter all players chose their discards or not
     def allDiscarded(self):
         allDiscarded = True
         for p in self.players:
@@ -226,6 +233,7 @@ class Mus():
             allDiscarded = allDiscarded and playerDiscarded
         return allDiscarded
 
+    # Drops the selected cards from each player's hand
     def discardAll(self):
         for p in self.players:
             p.discard()
@@ -236,6 +244,7 @@ class Mus():
         return "mus"
 
 
+# Class from which every phase inherits
 class Phase:
     def __init__(self, players, mano):
         # Envites in this round (tuples of team and quantity)
@@ -247,6 +256,7 @@ class Phase:
         self.mano = mano
         self.turn = mano
 
+        # The winner of the phase and the points earned
         self.winner = None
         self.points = 0
 
@@ -268,6 +278,7 @@ class Phase:
     # def isPunto(self):
     #     return False
 
+    # Checks wheter ever player passed in the phase
     def allPassed(self):
         return (self.turn == self.mano)
 
@@ -281,6 +292,7 @@ class Phase:
         self.turn = (self.turn + 1) % 4
         return self.getTurn()
 
+    # Adds a new envite (bet) to the table
     def envidar(self, player, n=2):
         envite = Envite(player)
         envite.value = n
@@ -288,6 +300,7 @@ class Phase:
         self.lastBid = envite
         return envite
 
+    # Gets the last two bets (the only ones that matter)
     def getLastBids(self):
         blueBid = 0
         redBid = 0
@@ -302,6 +315,7 @@ class Phase:
                     blueBid = self.prevBid.value
         return blueBid, redBid
 
+    # When a team folds from a bet, the other team is the winner
     def fold(self):
         self.winner = self.lastBid.player
         self.points = 1
@@ -309,6 +323,7 @@ class Phase:
             self.points = self.prevBid.value
         return self.winner, self.points
 
+    # When a team sees a bet, the cards have to be checked to decide the winner
     def see(self):
         self.winner = self.getWinner()
         self.points = self.lastBid.value
@@ -321,23 +336,29 @@ class Phase:
         return self.winner, self.points
 
 
+# Class for grande phase
 class Grande(Phase):
 
     def isGrande(self):
         return True
 
+    # Selects the mano as the winner (in case of a tie)
+    # compares his cards with the next one (rival)
+    # whoever wins is the new winner
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % 4
         while(i != self.mano):
             rival = self.players[i]
-            print(winner.name+' vs '+rival.name)
             if self.defeat(winner.getGrande(), rival.getGrande()):
                 winner = rival
-            print('Winner: '+winner.name)
             i = (i + 1) % 4
         return winner
 
+    # Checks if the rival defeats the current winner
+    # whoever has the biggest card wins
+    # if there is a tie, the next biggest cards are compared
+    # if they have the same cards, the closest player to the mano wins
     def defeat(self, winner, rival):
         if len(winner) == 0:
             return False
@@ -360,18 +381,23 @@ class Chica(Phase):
     def isChica(self):
         return True
 
+    # Selects the mano as the winner (in case of a tie)
+    # compares his cards with the next one (rival)
+    # whoever wins is the new winner
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % 4
         while(i != self.mano):
             rival = self.players[i]
-            print(winner.name+' vs '+rival.name)
             if self.defeat(winner.getChica(), rival.getChica()):
                 winner = rival
-            print('Winner: '+winner.name)
             i = (i + 1) % 4
         return winner
 
+    # Checks if the rival defeats the current winner
+    # whoever has the smallest card wins
+    # if there is a tie, the next smallest cards are compared
+    # if they have the same cards, the closest player to the mano wins
     def defeat(self, winner, rival):
         if len(winner) == 0:
             return False
@@ -385,6 +411,8 @@ class Chica(Phase):
             return self.defeat(winner, rival)
         return False
 
+    # If everyone passed, whoever has the best chica wins 1 point
+    # this is called "chica en paso"
     def getResults(self):
         if self.points == 0:
             self.winner = self.getWinner()
@@ -404,12 +432,14 @@ class Pares(Phase):
         self.turn = (self.turn + 1) % len(self.players)
         return self.getTurn()
 
+    # Returns the team of the players that have pares
     def noPares(self):
         teams = []
         for p in self.players:
             teams.append(p.team)
         return teams
 
+    # Removes the players that don't have pares from the phase
     def recalculatePlayers(self):
         for i in range(0, 4):
             p = self.players.pop()
@@ -421,18 +451,22 @@ class Pares(Phase):
         self.turn = self.mano
         return
 
+    # Selects the mano as the winner (in case of a tie)
+    # compares his cards with the next one (rival)
+    # whoever wins is the new winner
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % len(self.players)
         while(i != self.mano):
             rival = self.players[i]
-            print(winner.name+' vs '+rival.name)
             if self.defeat(winner.getPares(), rival.getPares()):
                 winner = rival
-            print('Winner: '+winner.name)
             i = (i + 1) % len(self.players)
         return winner
 
+    # Checks if the rival defeats the current winner
+    # whoever has the longest pares wins
+    # if there is a tie, same as grande but only with the cards in the pares
     def defeat(self, winner, rival):
         if len(winner) == 0:
             return False
@@ -449,6 +483,11 @@ class Pares(Phase):
                 return self.defeat(winner, rival)
         return False
 
+    # Regardless of what happened during the phase,
+    # the team with the best pares gets for each player
+    # 1 point for 2 pares
+    # 2 points for 3 pares (medias)
+    # 3 points for 4 pares (duples)
     def getResults(self):
         if self.winner is None and len(self.players) > 0:
             self.winner = self.getWinner()
@@ -470,12 +509,14 @@ class Juego(Phase):
         self.turn = (self.turn + 1) % len(self.players)
         return self.getTurn()
 
+    # Returns the team of the players that have pares
     def noJuego(self):
         teams = []
         for p in self.players:
             teams.append(p.team)
         return teams
 
+    # Removes the players that don't have juego from the phase
     def recalculatePlayers(self):
         for i in range(0, 4):
             p = self.players.pop()
@@ -488,18 +529,23 @@ class Juego(Phase):
         self.turn = self.mano
         return
 
+    # Selects the mano as the winner (in case of a tie)
+    # compares his cards with the next one (rival)
+    # whoever wins is the new winner
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % len(self.players)
         while(i != self.mano):
             rival = self.players[i]
-            print(winner.name+' vs '+rival.name)
             if self.defeat(winner.getJuego(), rival.getJuego()):
                 winner = rival
-            print('Winner: '+winner.name)
             i = (i + 1) % len(self.players)
         return winner
 
+    # Checks if the rival defeats the current winner
+    # whoever has a juego of 31 wins
+    # if there is a tie, the closest to the mano wins
+    # if nobody has 31, same thing with 32, then same thing with 40, 39, 38...
     def defeat(self, winner, rival):
         if winner > 31:
             if rival == 31:
@@ -510,6 +556,10 @@ class Juego(Phase):
                 return True
         return False
 
+    # Regardless of what happened during the phase,
+    # the team with the best juego gets for each player
+    # 3 point for 31
+    # 2 points for any other juego
     def getResults(self):
         if self.winner is None and len(self.players) > 0:
             self.winner = self.getWinner()
@@ -566,10 +616,6 @@ class Round:
         self.deck.deal(self.players)
 
         # Phases in the round
-        # self.phases = [Juego(self.players, self.mano),
-        #                Pares(self.players, self.mano),
-        #                Chica(self.players, self.mano),
-        #                Grande(self.players, self.mano)]
         self.phases = ['juego', 'pares', 'chica', 'grande']
         self.phase = Mus(self.players, self.deck)
 

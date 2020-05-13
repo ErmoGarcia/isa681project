@@ -166,7 +166,6 @@ def new_disconnection():
 
         # If after that time the player is not back in the connected list
         if player not in room.connected:
-            print('Game over')
             send("User {} was afk for too long.".format(player.name),
                  namespace='/game', room=room)
 
