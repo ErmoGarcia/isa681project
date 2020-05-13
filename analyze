@@ -1,0 +1,3 @@
+#!/bin/sh
+. venv/bin/activate
+bandit -r . -x *venv*,*.pyc -f txt -o bandit-report.txt

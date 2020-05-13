@@ -14,3 +14,4 @@ pip install gevent
 pip install gevent-websocket
 pip install gunicorn
 pip install email_validator
+pip install bandit

@@ -15,7 +15,9 @@ from game.models import db, User, Game, Move
 from game.mus import Room, Card
 
 from flask_login import current_user
-from flask_socketio import SocketIO, emit, send, join_room, leave_room, close_room
+from flask_socketio import (
+    SocketIO, emit, send, join_room, leave_room, close_room
+)
 
 # Create the play blueprint
 bp = Blueprint('play', __name__, url_prefix='/play')
@@ -545,10 +547,12 @@ def finish(room):
         for p in room.players:
             user = User.query.filter_by(username=p.name).first()
             if p.team == "blue":
-                emit('finish', {"message": "You won!"}, namespace='/game', room=p.sid)
+                emit('finish', {"message": "You won!"},
+                     namespace='/game', room=p.sid)
                 user.wins = user.wins + 1
             elif p.team == "red":
-                emit('finish', {"message": "You lost :("}, namespace='/game', room=p.sid)
+                emit('finish', {"message": "You lost :("},
+                     namespace='/game', room=p.sid)
                 user.losses = user.losses + 1
 
     if room.scoreRed > room.scoreBlue:
@@ -562,7 +566,8 @@ def finish(room):
                 emit('finish', {"message": "You won!"}, room=p.sid)
                 user.wins = user.wins + 1
             elif p.team == "blue":
-                emit('finish', {"message": "You lost :("}, namespace='/game', room=p.sid)
+                emit('finish', {"message": "You lost :("}, namespace='/game',
+                     room=p.sid)
                 user.losses = user.losses + 1
 
     room.finished = datetime.utcnow()

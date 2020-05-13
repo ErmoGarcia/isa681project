@@ -18,17 +18,26 @@ Project for ISA681 course
 
 ## 5. Game Rules
 
+
+
+
 ## 6. Why you believe is secure
+
+In order to make a convincing argument defending that our program is secure enough, we will try to prove that it follows the confidentiality, integrity and availability requirements for the project.
 
 ### 6.1 Server
 
 ### 6.2 Input validation
 
-### 6.3 Dynamic tool
+### 6.3 Tools
+
+#### Dynamic tool: OWASP ZAP
 
 + OWASP ZAP
 
-### 6.4 Static tool
+#### Static tools
+
+
 
 + PMD
 + FindBugs

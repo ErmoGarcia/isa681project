@@ -6,7 +6,7 @@ from flask import (
     Blueprint, request, session, redirect, render_template, url_for, flash
 )
 
-from game.models import User, Game, Move
+from game.models import User, Game
 from game.play import socketio
 
 from flask_login import current_user
@@ -51,11 +51,12 @@ def history():
 
     # INCOMPLETE
     # Searches for games in the database
-    user = User.query.filter_by(username=current_user.username).first()
-    games = []
-    for game in user.games:
-        if game.finished is not None:
-            games.append(game)
+    # user = User.query.filter_by(username=current_user.username).first()
+    # games = []
+    # for game in user.games:
+    #     if game.finished is not None:
+    #         games.append(game)
+    games = Game.query.filter(Game.finished is not None).all()
     return render_template('info/history.html', games=games)
 
 
@@ -66,12 +67,12 @@ def gamehistory(id):
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
-    game = Game.query.filter_by(room_id=id).first()
-
-    user = User.query.filter_by(username=current_user.username).first()
-    if user not in game.players:
-        flash('You didn\'t participate in this game.')
-        return redirect(url_for('info.history'))
+    # game = Game.query.filter_by(room_id=id).first()
+    #
+    # user = User.query.filter_by(username=current_user.username).first()
+    # if user not in game.players:
+    #     flash('You didn\'t participate in this game.')
+    #     return redirect(url_for('info.history'))
 
     session['game'] = id
     session['move'] = 0
