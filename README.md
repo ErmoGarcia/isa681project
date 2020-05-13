@@ -23,7 +23,16 @@ Project for ISA681 course
 
 ## 6. Why you believe is secure
 
-In order to make a convincing argument defending that our program is secure enough, we will try to prove that it follows the confidentiality, integrity and availability requirements for the project.
+In order to make a convincing argument defending that our program is secure enough, we will try to prove that it meets the confidentiality, integrity and availability requirements defined for this project. If we are able to do this, it can be concluded that we covered most important security issues, as these requirements are considered the core principles of security.
+
+To meet the confidentiality requirement, the audit of the games and the player statistics have to be available only to authenticated users and only when the game has ended. This is only possible if player authentication is secure, communication between client and server is protected and read access to the database is restricted.
+
+To meet the integrity requirement, every move during a game has to be legal and it can't be modified after being stored in the database. This is achieved by validating every user input enters the server and restricting write access to the database.
+
+To meet the availability requirement, the game has to resist intentionally and unintentionally provoked errors without completly failing or at least recover quickly from them. This means that, again, input validation has to be performed and some recovery procedure has to be implemented.
+
+In the following sections, we will present every implementation decission that we have made in order to cover all of these requirements.
+
 
 ### 6.1 Server
 
@@ -36,8 +45,6 @@ In order to make a convincing argument defending that our program is secure enou
 + OWASP ZAP
 
 #### Static tools
-
-
 
 + PMD
 + FindBugs

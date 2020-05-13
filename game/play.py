@@ -132,10 +132,13 @@ def new_connection():
     send("User {} has connected.".format(player.name),
          namespace='/game', room=room)
 
+    # If the player that just connected was the 4th in the room the game starts
     if room.isFull():
         start(room)
+    return
 
 
+# Socket disconnection event
 @socketio.on('disconnect', namespace='/game')
 def new_disconnection():
 
@@ -144,37 +147,53 @@ def new_disconnection():
     if room is None:
         return
 
+    # Because the player that just disconnected might have logged out,
+    # we check his identity using th sid
     player = room.getBySid(request.sid)
     if player is None:
-        print('Players should be in the game before they disconnect.')
         return
 
+    # The player is removed from the connected players list but
+    # not from the actual players list yet, he might still come back
     room.disconnect(player)
     leave_room(room)
     print('{} has disconnected.'.format(player.name))
 
+    # Unless the game has not started already
     if room.isStarted():
+        # It waits 60 seconds
         time.sleep(60)
 
+        # If after that time the player is not back in the connected list
         if player not in room.connected:
-            print('game over')
+            print('Game over')
             send("User {} was afk for too long.".format(player.name),
                  namespace='/game', room=room)
+
+            # The player's team loses
             if player.team == "blue":
                 room.scoreRed = 100
             if player.team == "red":
                 room.scoreBlue = 100
+
+            # The game ends
             finish(room)
             return
+        return
 
+    # The player is now removed from the players list
     room.players.remove(player)
     send("User {} has disconnected.".format(player.name),
          namespace='/game', room=room)
+
+    # If there are no players left, the room is destroyed
+    # this happens only if the game has not started
     if len(room.players) == 0:
         rooms.pop(session['room'])
     return
 
 
+# Socket event triggered by a player move during the mus phase
 @socketio.on('client_mus_turn', namespace='/game')
 def client_mus_turn(data):
     if not current_user.is_authenticated:
@@ -185,50 +204,78 @@ def client_mus_turn(data):
     if room is None:
         return False
 
+    # Checks that the sid of the socket conection from which the input comes
+    # corresponds to the logged in player
     player = room.getBySid(request.sid)
     if player not in room.players or player.name != current_user.username:
         return False
 
+    # Gets the round and the phase from the room object
     round = room.round
     if round is None:
         return False
-
     phase = round.getPhase()
     if phase is None:
         return False
 
+    # If the phase is not mus, the move is not valid
     if not phase.isMus():
         return False
 
     # input validation!!!!
     # data
 
+    # Chacks if the player wants to cut mus
     if bool(data['cutMus']):
-        msg = "{} cuts mus.".format(player.name)
-        move_db(room, msg)
-        send(msg, namespace='/game', room=room)
-        mus_turn(room, True)
+        cut_mus(room, player)
         return True
+
+    # Checks that the player selected cards to throw
+    if data['discards'] is None:
+        return False
+
+    # Calls mus
+    call_mus(room, player, data['discards'])
+    return True
+
+
+# When a player calls cut mus
+def cut_mus(room, player):
+    msg = "{} cuts mus.".format(player.name)
+    move_db(room, msg)
+    send(msg, namespace='/game', room=room)
+    mus_turn(room, True)
+    return
+
+
+# When a player calls mus
+def call_mus(room, player, discards):
     msg = "{} calls mus.".format(player.name)
     move_db(room, msg)
     send(msg, namespace='/game', room=room)
 
-    if data['discards'] is not None:
-        for discard in data['discards']:
-            rank = int(discard[0])
-            suit = discard[1]
-            card = Card(rank, suit)
-            player.addDiscard(card)
-        if phase.allDiscarded():
-            msg = "Everybody called mus."
-            move_db(room, msg)
-            send(msg, namespace='/game', room=room)
-            phase.discardAll()
-            mus_turn(room, False)
+    phase = room.round.getPhase()
+    if not phase.isMus():
+        return
 
-    return True
+    # The cards that the player selected are added to his discards list
+    for discard in discards:
+        rank = int(discard[0])
+        suit = discard[1]
+        card = Card(rank, suit)
+        player.addDiscard(card)
+
+    # If everyone has selected his discards, everyone is discarded
+    if phase.allDiscarded():
+        msg = "Everybody called mus."
+        move_db(room, msg)
+        send(msg, namespace='/game', room=room)
+        phase.discardAll()
+        mus_turn(room, False)
+    return
 
 
+# Socket event triggered by a player move during a phase other than mus
 @socketio.on('client_game_turn', namespace='/game')
 def client_game_turn(data):
     if not current_user.is_authenticated:
@@ -239,22 +286,25 @@ def client_game_turn(data):
     if room is None:
         return False
 
+    # Checks that the sid of the socket conection from which the input comes
+    # corresponds to the logged in player
     player = room.getBySid(request.sid)
     if player not in room.players or player.name != current_user.username:
         return False
 
+    # Gets the room and phase from the room object
     round = room.round
     if round is None:
         return False
-
     phase = round.getPhase()
     if phase is None:
         return False
 
+    # In some phases not all players are allowed to participate
     if player not in phase.players:
         return False
 
-    # A player can't bet if its not his turn
+    # A player can't make a move if its not his turn
     turn = phase.getTurn()
     if player != turn:
         return False
@@ -262,34 +312,74 @@ def client_game_turn(data):
     # input validation!!!!!
     # data
 
+    # Get the last bid that have been made
     envite = phase.lastBid
 
+    # When the player is introducing a new bid
     if int(data['bid']) is not None and int(data['bid']) > 0:
-        print('New envite: '+str(data['bid']))
         new_envite(room, player, envite, int(data['bid']))
         return True
 
+    # When the player sees the last bid
     if bool(data['see']):
         if envite is None:
             return False
-        print(player.name+' ve el envite.')
 
-        msg = "{} sees the bet.".format(player.name)
-        move_db(room, msg)
-        send(msg, namespace='/game', room=room)
-        phase.see()
-        new_phase(room)
-        if room.round.getPhase().isMus():
-            return True
+        player_sees(room, player)
         return True
 
+    # When the palyer passes
+    player_passes(room, player)
+    return True
+
+
+# When the player is introducing a new bid
+def new_envite(room, player, envite, bid):
+    phase = room.round.getPhase()
+    turn = phase.getTurn()
+
+    # It there is a bet already, the new one increases it
     if envite is not None:
-        print('Last envite: '+str(envite.value)+', '+envite.color)
+        bid = bid + envite.value
+
+    msg = "{player} bets {value}.".format(player=player.name, value=bid)
+    move_db(room, msg)
+    send(msg, namespace='/game', room=room)
+    phase.envidar(player, bid)
+
+    # The turns order is altered
+    # only players of the opposite team can make a move now
+    while(turn.team == phase.lastBid.color):
+        turn = phase.nextTurn()
+    game_turn(room)
+    return
+
+
+# When a player sees the last bid
+def player_sees(room, player):
+    msg = "{} sees the bet.".format(player.name)
+    move_db(room, msg)
+    send(msg, namespace='/game', room=room)
+    room.round.getPhase().see()
+    new_phase(room)
+    return
+
+
+# When a player passes
+def player_passes(room, player):
+    phase = room.round.getPhase()
+    turn = phase.getTurn()
+    envite = phase.lastBid
+
+    # If there is a bet on the table
+    if envite is not None:
         msg = "{} doesn't see the bet.".format(player.name)
         move_db(room, msg)
         send(msg, namespace='/game', room=room)
         turn = phase.nextTurn()
 
+        # The turns order is altered
+        # only players of the opposite team can make a move now
         while(turn.team == envite.color):
             if turn == envite.player:
                 phase.fold()
@@ -303,23 +393,31 @@ def client_game_turn(data):
     msg = "{} passes.".format(player.name)
     move_db(room, msg)
     send(msg, namespace='/game', room=room)
-
     turn = phase.nextTurn()
+
+    # When everyone passed
     if phase.allPassed():
         new_phase(room)
-        if room.round.getPhase().isMus():
-            return True
+
+    if room.round.getPhase().isMus():
+        return True
 
     game_turn(room)
     return True
 
 
+# When the game starts
 def start(room):
+    # The time is set and the teams are made
+    # the 1st and the 3rd player entering the room are the blue team
+    # the 2nd and 4th player are the red team
     room.started = datetime.utcnow()
     room.makeTeams()
 
     start_db(room)
 
+    # Every player receives the names of other players
+    # and his team (based on his possition entering the room)
     for p in room.players:
         data = {
             "scoreBlue": room.scoreBlue,
@@ -332,12 +430,14 @@ def start(room):
     return
 
 
+# When a new round starts
 def new_round(room):
     room.newRound()
     mano = room.getMano().name
     msg = "{} is mano this round.".format(mano)
-    # move_db(room, msg)
+    move_db(room, msg)
 
+    # The players receive the updated scores
     data = {
         "scoreBlue": room.scoreBlue,
         "scoreRed": room.scoreRed,
@@ -349,27 +449,20 @@ def new_round(room):
     return
 
 
+# When a new phase starts
 def new_phase(room):
     round = room.round
     phase = round.nextPhase()
 
+    # When there are no phases left for this round
     if phase is None:
         show_down(room)
         time.sleep(60)
 
-        winners = round.winners
-        points = round.points
-        for i in range(0, 4):
-            winner = winners[i]
-            amount = points[i]
-            if winner is None:
-                pass
-            elif winner.team == "blue":
-                room.scoreBlue = room.scoreBlue + amount
-            elif winner.team == "red":
-                room.scoreRed = room.scoreRed + amount
-            if room.scoreRed >= 40 or room.scoreBlue >= 40:
-                finish(room)
+        # Checks if the game ended after the points update
+        finished = score_update(room)
+        if finished:
+            return
 
         new_round(room)
         return
@@ -378,6 +471,8 @@ def new_phase(room):
     move_db(room, msg)
     send(msg, namespace='/game', room=room)
 
+    # When the new phase is pares it has to check who has pares
+    # those who don't won't participate
     if phase.isPares():
         for p in phase.players:
             if p.hasPares() is not None:
@@ -392,6 +487,8 @@ def new_phase(room):
             new_phase(room)
             return
 
+    # When the new phase is juego it has to check who has juego
+    # those who don't won't participate
     if phase.isJuego():
         for p in phase.players:
             if p.hasJuego():
@@ -410,21 +507,40 @@ def new_phase(room):
     return
 
 
+# Updates the scores
+def score_update(room):
+    # Gets the winners for each round and the points earned
+    winners = room.round.winners
+    points = room.round.points
+
+    # Assigns the points to the corresponding team
+    for i in range(0, 4):
+        winner = winners[i]
+        amount = points[i]
+        if winner is None:
+            pass
+        elif winner.team == "blue":
+            room.scoreBlue = room.scoreBlue + amount
+        elif winner.team == "red":
+            room.scoreRed = room.scoreRed + amount
+
+        # When a team score is more than 40, that team has won
+        if room.scoreRed >= 40 or room.scoreBlue >= 40:
+            finish(room)
+            return True
+    return False
+
+
+# When a mus phase starts
 def mus_turn(room, cutMus=False):
+
+    # When someone has cut
     if cutMus:
-        # phase = room.round.nextPhase()
-        # if phase is None:
-        #     return False
-        # if not phase.isGrande():
-        #     return False
-
-        # emit('mus_turn', {"cutMus": True, "cards": None},
-        #      room=room)
-
         new_phase(room)
         game_turn(room)
         return
 
+    # Informs the players of the cards they have gotten
     for p in room.players:
         cards = []
         for c in p.cards:
@@ -439,15 +555,15 @@ def mus_turn(room, cutMus=False):
     return
 
 
+# When a phase other than mus starts
 def game_turn(room):
     phase = room.round.getPhase()
-    # print('Turn: '+str(phase.turn))
-    # print('Number of players: '+str(len(phase.players)))
     turn = phase.getTurn()
 
     blueBid, redBid = phase.getLastBids()
     phase_name = phase.getName()
 
+    # Informs the players of the bids on the table, the phase and the turn
     data = {
         "phase": phase_name,
         "blueBid": blueBid,
@@ -459,28 +575,21 @@ def game_turn(room):
     move_db(room, msg)
     send(msg, namespace='/game', room=room)
     emit('game_turn', data, namespace='/game', room=room)
+
+    # It waits 40 seconds for the player to make a move
+    # if not, it is considered that he passed
+    time.sleep(40)
+    if phase == room.round.getPhase() and turn == phase.getTurn():
+        msg = "{} was too slow.".format(turn.name)
+        move_db(room, msg)
+        send(msg, namespace='/game', room=room)
+        player_passes(room, turn)
     return
 
 
-def new_envite(room, player, envite, bid):
-    phase = room.round.getPhase()
-    turn = phase.getTurn()
-
-    if envite is not None:
-        bid = bid + envite.value
-
-    msg = "{player} bets {value}.".format(player=player.name, value=bid)
-    move_db(room, msg)
-    send(msg, namespace='/game', room=room)
-    phase.envidar(player, bid)
-
-    while(turn.team == phase.lastBid.color):
-        turn = phase.nextTurn()
-    game_turn(room)
-    return
-
-
+# The showdown of the current round
 def show_down(room):
+    # Informs everyone of the cards of all players
     playerCards = {}
     for p in room.players:
         cards = []
@@ -488,6 +597,7 @@ def show_down(room):
             cards.append((c.rank, c.suit))
         playerCards[p.name] = cards
 
+    # Gets the winners and corresponding points
     winners = room.round.winners
     points = room.round.points
 
@@ -496,6 +606,7 @@ def show_down(room):
     pares = ("Nobody", 0)
     juego = ("Nobody", 0)
 
+    # Informs the players of the winner and points for each phase
     if winners[0] is not None:
         grande = (winners[0].name, points[0])
         msg = "{0} ({1} team) wins {2} points for grande.".format(
@@ -525,6 +636,7 @@ def show_down(room):
     # else:
     #     punto = None
 
+    # Sends everything out
     data = {
         "playerCards": playerCards,
         "grande": grande,
@@ -533,17 +645,19 @@ def show_down(room):
         "juego": juego,
         # "punto": punto
     }
-
     emit('show_down', data, namespace='/game', room=room)
     return
 
 
+# When the game finishes
 def finish(room):
+    # Checks the score to decide who won
     if room.scoreBlue > room.scoreRed:
         msg = "Game ended: blue team won."
         move_db(room, msg)
         send(msg, namespace='/game', room=room)
 
+        # Updates the wins and losses for each player in the DB
         for p in room.players:
             user = User.query.filter_by(username=p.name).first()
             if p.team == "blue":
@@ -555,11 +669,13 @@ def finish(room):
                      namespace='/game', room=p.sid)
                 user.losses = user.losses + 1
 
+    # Checks the score to decide who won
     if room.scoreRed > room.scoreBlue:
         msg = "Game ended: red team won."
         move_db(room, msg)
         send(msg, namespace='/game', room=room)
 
+        # Updates the wins and losses for each player in the DB
         for p in room.players:
             user = User.query.filter_by(username=p.name).first()
             if p.team == "red":
@@ -570,24 +686,26 @@ def finish(room):
                      room=p.sid)
                 user.losses = user.losses + 1
 
+    # Sets the time
     room.finished = datetime.utcnow()
     game = Game.query.filter_by(room_id=room.id).first()
     game.finished = room.finished
     db.session.commit()
 
-    print(rooms)
+    # Destroys the room
     rooms.pop(session['room'])
     close_room(room)
     return
 
 
+# Check if the pares phase will be played
 def thereIsPares(room):
     phase = room.round.getPhase()
 
-    for p in phase.players:
-        print(p.name+' has pares')
-
+    # Gets the teams of the players who have pares
     teams = phase.noPares()
+
+    # When nobody has pares
     if len(teams) == 0:
         msg = "Nobody has pares."
         move_db(room, msg)
@@ -595,6 +713,7 @@ def thereIsPares(room):
         time.sleep(3)
         return False
 
+    # When only one team has pares
     if "blue" not in teams:
         msg = "Only red team has pares."
         move_db(room, msg)
@@ -602,6 +721,7 @@ def thereIsPares(room):
         time.sleep(3)
         return False
 
+    # When only one team has pares
     if "red" not in teams:
         msg = "Only blue team has pares."
         move_db(room, msg)
@@ -612,13 +732,14 @@ def thereIsPares(room):
     return True
 
 
+# Check if the juego phase will be played
 def thereIsJuego(room):
     phase = room.round.getPhase()
 
-    for p in phase.players:
-        print(p.name+' has juego')
-
+    # Gets the teams of the players who have juego
     teams = phase.noJuego()
+
+    # When nobody has juego
     if len(teams) == 0:
         msg = "Nobody has juego."
         move_db(room, msg)
@@ -626,6 +747,7 @@ def thereIsJuego(room):
         time.sleep(3)
         return False
 
+    # When only one team has juego
     if "blue" not in teams:
         msg = "Only red team has juego."
         move_db(room, msg)
@@ -633,6 +755,7 @@ def thereIsJuego(room):
         time.sleep(3)
         return False
 
+    # When only one team has juego
     if "red" not in teams:
         msg = "Only blue team has juego."
         move_db(room, msg)
@@ -643,7 +766,10 @@ def thereIsJuego(room):
     return True
 
 
+# When a player is connecting back
+# (he was already in the room when the game started)
 def reconnect(room, player):
+    # He is informed of the scores, the player names and his team
     data = {
         "scoreBlue": room.scoreBlue,
         "scoreRed": room.scoreRed,
@@ -658,6 +784,7 @@ def reconnect(room, player):
     }
     emit('start_round', data, namespace='/game', room=player.sid)
 
+    # He is informed of his current cards
     cards = []
     for c in player.cards:
         cards.append([c.rank, c.suit])
@@ -668,6 +795,7 @@ def reconnect(room, player):
     }
     emit('mus_turn', data_mus, namespace='/game', room=player.sid)
 
+    # He is informed of the current bids, phase and turn
     phase = room.round.getPhase()
     if not phase.isMus():
         turn = phase.getTurn()
@@ -682,11 +810,11 @@ def reconnect(room, player):
             "redBid": redBid,
             "turn": turn.name
         }
-
         emit('game_turn', data, namespace='/game', room=player.sid)
     return
 
 
+# Creates the DB entry for the game
 def start_db(room):
     game = Game(room_id=room.id, started=room.started)
     for p in room.players:
@@ -697,12 +825,14 @@ def start_db(room):
     return
 
 
+# Creates the DB entry for a move
 def move_db(room, msg):
     game = Game.query.filter_by(room_id=room.id).first()
     timestamp = datetime.utcnow()
     phase = room.round.getPhase().getName()
     message = msg
 
+    # Saves every player's cards
     cards = []
     for p in room.players:
         for c in p.cards:

@@ -15,7 +15,7 @@ from flask_socketio import emit
 # Create info blueprint
 bp = Blueprint('info', __name__, url_prefix='/info')
 
-# Home function: get user's home page
+# Home page
 @bp.route('/home')
 def home():
     if not current_user.is_authenticated:
@@ -25,12 +25,14 @@ def home():
     return render_template('info/home.html')
 
 
+# Statistics page
 @bp.route('/stats')
 def stats():
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
+    # Gets the statistics for the player and everyone alse
     stats = {}
     users = User.query.order_by(User.username).all()
     for user in users:
@@ -42,66 +44,61 @@ def stats():
     return render_template('info/stats.html', stats=stats)
 
 
-# History function
+# History page
 @bp.route('/history')
 def history():
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
-    # INCOMPLETE
-    # Searches for games in the database
-    # user = User.query.filter_by(username=current_user.username).first()
-    # games = []
-    # for game in user.games:
-    #     if game.finished is not None:
-    #         games.append(game)
-    games = Game.query.filter(Game.finished is not None).all()
+    # Gets every game in history
+    games = Game.query.filter(Game.finished != None).all()
     return render_template('info/history.html', games=games)
 
 
-# History function
+# History of a game page
 @bp.route('/gamehistory/<id>')
 def gamehistory(id):
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
-    # game = Game.query.filter_by(room_id=id).first()
-    #
-    # user = User.query.filter_by(username=current_user.username).first()
-    # if user not in game.players:
-    #     flash('You didn\'t participate in this game.')
-    #     return redirect(url_for('info.history'))
-
+    # Stores the game id and the current move in the players session
     session['game'] = id
     session['move'] = 0
 
     return render_template('info/gamehistory.html')
 
 
+# When a player connects to a game history page
 @socketio.on('connect', namespace='/history')
 def connection():
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
+    # Gets the game id and the current move from the session
+    # loads the from the DB
     game = Game.query.filter_by(room_id=session['game']).first()
     move = game.moves[session['move']]
     load_move(game, move)
     return
 
 
+# When a user clicks next
 @socketio.on('next', namespace='/history')
 def next(data):
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
+    # Gets the game id and the current move from the session
+    # loads the from the DB
     game = Game.query.filter_by(room_id=session['game']).first()
     if session['move'] == len(game.moves) - 1:
         return
 
+    # Gets the following move
     session['move'] = session['move'] + 1
     move = game.moves[session['move']]
 
@@ -109,16 +106,20 @@ def next(data):
     return
 
 
+# When a user clicks previous
 @socketio.on('prev', namespace='/history')
 def prev(data):
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
 
+    # Gets the game id and the current move from the session
+    # loads the from the DB
     game = Game.query.filter_by(room_id=session['game']).first()
     if session['move'] == 0:
         return
 
+    # Gets the previous move
     session['move'] = session['move'] - 1
     move = game.moves[session['move']]
 
@@ -126,6 +127,7 @@ def prev(data):
     return
 
 
+# Loads a move from the DB
 def load_move(game, move):
     phase = move.phase
     message = move.message
@@ -139,6 +141,8 @@ def load_move(game, move):
     cards = [move.getPlayer1Cards(), move.getPlayer2Cards(),
              move.getPlayer3Cards(), move.getPlayer4Cards()]
 
+    # Informs the user of the players names, the phase, the scores,
+    # the explainatory message if the move, and the cards for all players
     data = {
         "players": players,
         "phase": phase,
