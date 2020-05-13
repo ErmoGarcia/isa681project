@@ -21,7 +21,7 @@ from flask_socketio import SocketIO, emit, send, join_room, leave_room, close_ro
 bp = Blueprint('play', __name__, url_prefix='/play')
 
 # Extension: socketio
-socketio = SocketIO()
+socketio = SocketIO(cors_allowed_origins='http://localhost:8000')
 
 
 # List of active rooms
