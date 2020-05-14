@@ -56,7 +56,7 @@ def register():
             # Check that the email is a alphanumeric string
             # between 1 and 50 characters long (whitelist)
             # this one is less restrictive because email is never used
-            if not re.search("^[0-9a-zA-Z@.]{1,50}$", email):
+            if not re.search("^[0-9a-zA-Z@.]{5,50}$", email):
                 flash('Wrong email.')
                 return redirect(url_for('auth.register'))
 

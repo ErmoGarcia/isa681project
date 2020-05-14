@@ -12,6 +12,8 @@ from game.play import socketio
 from flask_login import current_user
 from flask_socketio import emit
 
+import re
+
 # Create info blueprint
 bp = Blueprint('info', __name__, url_prefix='/info')
 
@@ -65,6 +67,16 @@ def gamehistory(id):
     if not current_user.is_authenticated:
         flash('You need to login first.')
         return redirect(url_for('auth.login'))
+
+    # Input validation!
+    try:
+        if not re.search("^[0-9]{30,50}$", id):
+            flash('No such game.')
+            return redirect(url_for('info.home'))
+        Game.query.filter_by(room_id=id).first()
+    except Exception:
+        flash('No such game.')
+        return redirect(url_for('info.home'))
 
     # Stores the game id and the current move in the players session
     session['game'] = id
