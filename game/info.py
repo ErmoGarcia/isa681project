@@ -17,6 +17,7 @@ import re
 # Create info blueprint
 bp = Blueprint('info', __name__, url_prefix='/info')
 
+
 # Home page
 @bp.route('/home')
 def home():
@@ -57,7 +58,7 @@ def history():
         return redirect(url_for('auth.login'))
 
     # Gets every game in history
-    games = Game.query.filter(Game.finished != None).all()
+    games = Game.query.filter(Game.finished is None).all()
     return render_template('info/history.html', games=games)
 
 

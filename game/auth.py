@@ -22,11 +22,15 @@ bcrypt = Bcrypt()
 login_manager = LoginManager()
 
 # Load user function (from login extension)
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.filter(User.id == int(user_id)).first()
 
 # Register function: user registration
+
+
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
     # Imports the register form from the file forms.py
@@ -61,13 +65,17 @@ def register():
                 return redirect(url_for('auth.register'))
 
             # Check that the username is not registered already
-            exists = db.session.query(User.id).filter_by(username=name).scalar()
+            exists = (db.session.query(User.id)
+                      .filter_by(username=name)
+                      .scalar())
             if exists is not None:
                 flash('Username already in use.')
                 return redirect(url_for('auth.register'))
 
             # Check that the email is not registered already
-            exists = db.session.query(User.id).filter_by(email=email).scalar()
+            exists = (db.session.query(User.id)
+                      .filter_by(email=email)
+                      .scalar())
             if exists is not None:
                 flash('Email already in use.')
                 return redirect(url_for('auth.register'))

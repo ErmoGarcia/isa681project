@@ -3,7 +3,7 @@
 ####################
 
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 import time
 
@@ -257,7 +257,16 @@ def mus_validate(data):
                     return False
                 if not int(d[0]) in range(1, 11):
                     return False
-                suits = {"oros", "copas", "espadas", "bastos", "o", "c", "b", "e"}
+                suits = {
+                    "oros",
+                    "copas",
+                    "espadas",
+                    "bastos",
+                    "o",
+                    "c",
+                    "b",
+                    "e"
+                }
                 if not str(d[1]) in suits:
                     return False
             except Exception:
@@ -396,7 +405,7 @@ def new_envite(room, player, envite, bid):
 
     # The turns order is altered
     # only players of the opposite team can make a move now
-    while(turn.team == phase.lastBid.color):
+    while (turn.team == phase.lastBid.color):
         turn = phase.nextTurn()
     game_turn(room)
     return
@@ -427,7 +436,7 @@ def player_passes(room, player):
 
         # The turns order is altered
         # only players of the opposite team can make a move now
-        while(turn.team == envite.color):
+        while (turn.team == envite.color):
             if turn == envite.player:
                 phase.fold()
                 new_phase(room)
@@ -458,7 +467,7 @@ def start(room):
     # The time is set and the teams are made
     # the 1st and the 3rd player entering the room are the blue team
     # the 2nd and 4th player are the red team
-    room.started = datetime.utcnow()
+    room.started = datetime.now(timezone.utc)
     room.makeTeams()
 
     start_db(room)
@@ -734,7 +743,7 @@ def finish(room):
                 user.losses = user.losses + 1
 
     # Sets the time
-    room.finished = datetime.utcnow()
+    room.finished = datetime.now(timezone.utc)
     game = Game.query.filter_by(room_id=room.id).first()
     game.finished = room.finished
     db.session.commit()
@@ -875,7 +884,7 @@ def start_db(room):
 # Creates the DB entry for a move
 def move_db(room, msg):
     game = Game.query.filter_by(room_id=room.id).first()
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now(timezone.utc)
     phase = room.round.getPhase().getName()
     message = msg
 

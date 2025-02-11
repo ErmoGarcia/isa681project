@@ -3,7 +3,13 @@ from flask import (
 )
 
 from flask_login import current_user
-from flask_bootstrap import Bootstrap
+from flask_bootstrap import Bootstrap4
+
+from game.models import db
+from game.auth import bp, bcrypt, login_manager
+
+from . import play
+from . import info
 
 
 def create_app():
@@ -14,28 +20,24 @@ def create_app():
     app.config.from_object('config')
 
     # Initialize Database
-    from game.models import db
     db.init_app(app)
     with app.app_context():
         db.create_all()
 
     # Initialize login
-    from game.auth import bp, bcrypt, login_manager
     bcrypt.init_app(app)
     login_manager.init_app(app)
     app.register_blueprint(bp)
 
     # Initialize play
-    from . import play
     play.socketio.init_app(app)
     app.register_blueprint(play.bp)
 
     # Initialize info
-    from . import info
     app.register_blueprint(info.bp)
 
     # Initialize bootstrap
-    Bootstrap(app)
+    Bootstrap4(app)
 
     @app.route('/')
     def index():

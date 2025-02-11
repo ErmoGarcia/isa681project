@@ -3,15 +3,15 @@
 #########
 
 from flask_wtf import FlaskForm
-from wtforms import TextField, PasswordField
+from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired, Length, Email, EqualTo
 
 
 # Login form
 class LoginForm(FlaskForm):
 
-    username = TextField('Username', validators=[DataRequired()],
-                         render_kw={"placeholder": "username"})
+    username = StringField('Username', validators=[DataRequired()],
+                           render_kw={"placeholder": "username"})
 
     password = PasswordField('Password', validators=[DataRequired()],
                              render_kw={"placeholder": "password"})
@@ -20,11 +20,11 @@ class LoginForm(FlaskForm):
 # Registration form
 class RegisterForm(FlaskForm):
 
-    username = TextField('Username',
-                         validators=[DataRequired(), Length(min=4, max=25)],
-                         render_kw={"placeholder": "username"})
+    username = StringField('Username',
+                           validators=[DataRequired(), Length(min=4, max=25)],
+                           render_kw={"placeholder": "username"})
 
-    email = TextField(
+    email = StringField(
         'Email', validators=[
             DataRequired(), Email(message=None), Length(min=6, max=40)
         ],

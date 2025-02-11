@@ -4,7 +4,7 @@
 
 import secrets
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # A Spanish naipe (card)
@@ -57,7 +57,7 @@ class Deck:
     # Shuffles the deck
     def shuffle(self):
         n = len(self.cards)
-        while(n > 0):
+        while (n > 0):
             choice = secrets.choice(self.cards[:n])
             self.cards.remove(choice)
             self.cards.append(choice)
@@ -66,7 +66,7 @@ class Deck:
 
     # Reshuffle the discards when there are no cards left in the main deck
     def reshuffle(self):
-        while(len(self.discards) > 0):
+        while (len(self.discards) > 0):
             card = self.discards.pop()
             self.cards.append(card)
         self.shuffle()
@@ -83,7 +83,7 @@ class Deck:
     # Deal cards to all players unil thir hands are full
     def deal(self, players):
         allFull = False
-        while(not allFull):
+        while (not allFull):
             allFull = True
             for p in players:
                 if not p.fullHand():
@@ -126,7 +126,7 @@ class Player:
 
     # Drops the cards from the list of discards
     def discard(self):
-        while(len(self.discards) > 0):
+        while (len(self.discards) > 0):
             discard = self.discards.pop()
             for card in self.cards:
                 if discard.rank == card.rank and discard.suit == card.suit:
@@ -348,7 +348,7 @@ class Grande(Phase):
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % 4
-        while(i != self.mano):
+        while (i != self.mano):
             rival = self.players[i]
             if self.defeat(winner.getGrande(), rival.getGrande()):
                 winner = rival
@@ -387,7 +387,7 @@ class Chica(Phase):
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % 4
-        while(i != self.mano):
+        while (i != self.mano):
             rival = self.players[i]
             if self.defeat(winner.getChica(), rival.getChica()):
                 winner = rival
@@ -457,7 +457,7 @@ class Pares(Phase):
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % len(self.players)
-        while(i != self.mano):
+        while (i != self.mano):
             rival = self.players[i]
             if self.defeat(winner.getPares(), rival.getPares()):
                 winner = rival
@@ -535,7 +535,7 @@ class Juego(Phase):
     def getWinner(self):
         winner = self.players[self.mano]
         i = (self.mano + 1) % len(self.players)
-        while(i != self.mano):
+        while (i != self.mano):
             rival = self.players[i]
             if self.defeat(winner.getJuego(), rival.getJuego()):
                 winner = rival
@@ -662,7 +662,7 @@ class Room:
         self.id = id
 
         # Times of creation, beginning and end
-        self.created = datetime.utcnow()
+        self.created = datetime.now(timezone.utc)
         self.started = None
         self.finished = None
 
