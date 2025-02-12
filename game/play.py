@@ -101,7 +101,7 @@ def gameroom(id):
 
 # Socket connection event
 @socketio.on('connect', namespace='/game')
-def new_connection():
+def new_connection(auth=None):
     if not current_user.is_authenticated:
         return False
 
@@ -872,12 +872,13 @@ def reconnect(room, player):
 
 # Creates the DB entry for the game
 def start_db(room):
-    game = Game(room_id=room.id, started=room.started)
-    for p in room.players:
-        user = User.query.filter_by(username=p.name).first()
-        game.players.append(user)
-    db.session.add(game)
-    db.session.commit()
+    with db.session.no_autoflush:
+        game = Game(room_id=room.id, started=room.started)
+        for p in room.players:
+            user = User.query.filter_by(username=p.name).first()
+            game.players.append(user)
+        db.session.add(game)
+        db.session.commit()
     return
 
 
